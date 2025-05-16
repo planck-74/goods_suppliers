@@ -1,0 +1,64 @@
+plugins {
+    id "com.android.application"
+    id 'com.google.gms.google-services'
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader("UTF-8") { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
+if (flutterVersionCode == null) {
+    flutterVersionCode = "1"
+}
+
+def flutterVersionName = localProperties.getProperty("flutter.versionName")
+if (flutterVersionName == null) {
+    flutterVersionName = "1.0"
+}
+
+android {
+    namespace 'com.example.goods'
+    compileSdkVersion flutter.compileSdkVersion
+    defaultConfig {
+        applicationId = "com.example.goods"
+        minSdk = 23
+        targetSdkVersion flutter.targetSdkVersion
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+    
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_19
+        targetCompatibility = JavaVersion.VERSION_19
+    }
+  kotlinOptions {
+        jvmTarget = '19'
+    }
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.debug
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
+dependencies {
+  implementation platform('com.google.firebase:firebase-bom:33.0.0') 
+  implementation 'com.google.firebase:firebase-auth:23.1.0'
+  implementation 'com.google.android.play:integrity:1.4.0'
+  implementation 'com.google.firebase:firebase-messaging:24.1.0'
+  implementation 'com.google.firebase:firebase-storage:21.0.1' 
+  implementation 'com.google.android.gms:play-services-auth:21.0.0'
+  coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+  
+}
+apply plugin: 'com.google.gms.google-services'
