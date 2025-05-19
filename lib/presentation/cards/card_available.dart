@@ -8,16 +8,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/presentation/sheets/sheet_available.dart';
 
 class AvailableCard extends StatefulWidget {
-  final Map<String, dynamic>? staticData;
-  final Map<String, dynamic> dynamicData;
+  final Map<String, dynamic>? product;
+
   final String storeId;
   final int index;
   final List productData;
 
   const AvailableCard({
     super.key,
-    required this.staticData,
-    required this.dynamicData,
+    required this.product,
     required this.storeId,
     required this.productData,
     required this.index,
@@ -33,23 +32,21 @@ class _AvailableCardState extends State<AvailableCard> {
   @override
   void initState() {
     super.initState();
-    product.addAll(widget.dynamicData); // إضافة البيانات الديناميكية
-    if (widget.staticData != null) {
-      product.addAll(widget.staticData!); // إضافة البيانات الثابتة إن وجدت
+    if (widget.product != null) {
+      product.addAll(widget.product!); // Add dynamic data
     }
   }
 
   /// يعرض صورة المنتج مع التعامل مع حالات التحميل والأخطاء
   Widget _buildProductImage() {
-    if (widget.staticData != null &&
-        widget.staticData!.containsKey('imageUrl')) {
+    if (widget.product != null && widget.product!.containsKey('imageUrl')) {
       return SizedBox(
         height: 115,
         width: 100,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8.0),
           child: Image.network(
-            widget.staticData!['imageUrl'],
+            widget.product!['imageUrl'],
             fit: BoxFit.cover,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
@@ -84,9 +81,13 @@ class _AvailableCardState extends State<AvailableCard> {
   }
 
   /// يعرض تفاصيل المنتج (الاسم مع الحجم والسعر وكميات الطلب)
-  Widget _buildProductDetails(Map<String, dynamic>? staticData) {
+  Widget _buildProductDetails(Map<String, dynamic>? product) {
+    if (product == null) {
+      return const Text('No product details available');
+    }
+
     final String title =
-        '${staticData?['name']}${staticData?['size'] != null ? ' - ${staticData?['size']}' : ''}';
+        '${product['name']}${product['size'] != null ? ' - ${product['size']}' : ''}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,20 +102,20 @@ class _AvailableCardState extends State<AvailableCard> {
               ?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
-        if (widget.dynamicData.containsKey('offerPrice') &&
-            widget.dynamicData['offerPrice'] != '' &&
-            widget.dynamicData['offerPrice'] != null) ...[
+        if (product.containsKey('offerPrice') &&
+            product['offerPrice'] != '' &&
+            product['offerPrice'] != null) ...[
           Row(
             children: [
               Text(
-                '${widget.dynamicData['offerPrice']} جـ',
+                '${product['offerPrice']} جـ',
                 style: const TextStyle(color: Colors.lightGreen, fontSize: 18),
               ),
               const SizedBox(
                 width: 12,
               ),
               Text(
-                '${widget.dynamicData['price']} جـ',
+                '${product['price']} جـ',
                 style: const TextStyle(
                     color: Colors.grey,
                     fontSize: 16,
@@ -123,23 +124,23 @@ class _AvailableCardState extends State<AvailableCard> {
             ],
           ),
           Text(
-            'أقصى كمية لطلب العرض: ${widget.dynamicData['maxOrderQuantityForOffer']}',
+            'أقصى كمية لطلب العرض: ${product['maxOrderQuantityForOffer']}',
             style: const TextStyle(color: darkBlueColor, fontSize: 14),
           ),
         ] else ...[
           Text(
-            '${widget.dynamicData['price']} جـ',
+            '${product['price']} جـ',
             style: const TextStyle(color: Colors.lightGreen, fontSize: 18),
           ),
         ],
         const SizedBox(height: 4),
         Text(
-          'أقل كمية للطلب: ${widget.dynamicData['minOrderQuantity']}',
+          'أقل كمية للطلب: ${product['minOrderQuantity']}',
           style: const TextStyle(color: Colors.grey, fontSize: 12),
         ),
         const SizedBox(height: 2),
         Text(
-          'أقصى كمية للطلب: ${widget.dynamicData['maxOrderQuantity']}',
+          'أقصى كمية للطلب: ${product['maxOrderQuantity']}',
           style: const TextStyle(color: Colors.grey, fontSize: 12),
         ),
       ],
@@ -177,7 +178,7 @@ class _AvailableCardState extends State<AvailableCard> {
                         .markProductAsUnavailable(
                           context,
                           widget.storeId,
-                          widget.dynamicData['productId'],
+                          widget.product!['productId'],
                         );
                     context
                         .read<AvailableCubit>()
@@ -235,7 +236,7 @@ class _AvailableCardState extends State<AvailableCard> {
                       const SizedBox(width: 6),
                       // Wrap product details with Expanded to allow text wrapping
                       Expanded(
-                        child: _buildProductDetails(widget.staticData),
+                        child: _buildProductDetails(widget.product),
                       ),
                     ],
                   ),
@@ -246,8 +247,8 @@ class _AvailableCardState extends State<AvailableCard> {
                     children: [
                       OutlinedButton(
                         style: ButtonStyle(
-                          elevation: const WidgetStatePropertyAll(10),
-                          shape: WidgetStatePropertyAll(
+                          elevation: WidgetStateProperty.all(10),
+                          shape: WidgetStateProperty.all(
                             RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8.0),
                             ),
@@ -286,7 +287,7 @@ class _AvailableCardState extends State<AvailableCard> {
                 ),
               ],
             ),
-            if (product['isOnSale'] == true)
+            if (product.containsKey('isOnSale') && product['isOnSale'] == true)
               Positioned(
                 right: 0,
                 top: 0,

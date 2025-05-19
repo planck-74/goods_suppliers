@@ -1,49 +1,85 @@
-class StoreProduct {
-  String productId;
-  bool availability;
-  int price;
-  int minOrderQuantity;
-  int maxOrderQuantity;
-  bool? isOnSale;
-  int? offerPrice;
-  DateTime? endDate;
-  int? maxOrderQuantityForOffer;
+class Product {
+  final String productId;
+  final String name;
+  final String classification;
+  final String imageUrl;
+  final String note;
+  final String manufacturer;
+  final String size;
+  final String package;
+  final int price;
+  final int? offerPrice;
+  final int maxOrderQuantity;
+  final int minOrderQuantity;
+  final int? maxOrderQuantityForOffer;
+  final int salesCount;
+  final bool isOnSale;
+  final bool availability;
+  final DateTime? endDate;
 
-  StoreProduct({
+  Product({
     required this.productId,
-    required this.availability,
+    required this.name,
+    required this.classification,
+    required this.imageUrl,
+    required this.note,
+    required this.manufacturer,
+    required this.size,
+    required this.package,
     required this.price,
-    required this.minOrderQuantity,
+    required this.offerPrice,
     required this.maxOrderQuantity,
-    this.isOnSale,
-    this.offerPrice,
-    this.endDate,
-    this.maxOrderQuantityForOffer,
+    required this.minOrderQuantity,
+    required this.maxOrderQuantityForOffer,
+    required this.salesCount,
+    required this.isOnSale,
+    required this.availability,
+    required this.endDate,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'productId': productId,
-      'availability': availability,
-      'price': price,
-      'minOrderQuantity': minOrderQuantity,
-      'maxOrderQuantity': maxOrderQuantity,
-      'isOnSale': isOnSale,
-      'offerPrice': offerPrice,
-      'endDate': endDate?.toIso8601String(),
-      'maxOrderQuantityForOffer': maxOrderQuantityForOffer,
-    };
+  factory Product.toMap(Map<String, dynamic> json) {
+    return Product(
+      productId: json['productId'] ?? '',
+      name: json['name'] ?? '',
+      classification: json['classification'],
+      imageUrl: json['imageUrl'],
+      note: json['note'],
+      manufacturer: json['manufacturer'],
+      size: json['size'],
+      package: json['package'],
+      price: json['price'],
+      offerPrice: json['offerPrice'],
+      maxOrderQuantity: json['maxOrderQuantity'],
+      minOrderQuantity: json['minOrderQuantity'],
+      maxOrderQuantityForOffer: json['maxOrderQuantityForOffer'],
+      salesCount: json['salesCount'],
+      isOnSale: json['isOnSale'],
+      availability: json['availability'],
+      endDate: json['endDate'] != null
+          ? DateTime.tryParse(json['endDate']) ?? DateTime(1970, 1, 1)
+          : DateTime(1970, 1, 1),
+    );
   }
 
-  StoreProduct.fromMap(Map<String, dynamic> map)
-      : productId = map['productId'],
-        availability = map['availability'],
-        price = map['price'],
-        minOrderQuantity = map['minOrderQuantity'],
-        maxOrderQuantity = map['maxOrderQuantity'],
-        isOnSale = map['isOnSale'],
-        offerPrice = map['offerPrice'],
-        endDate =
-            map['endDate'] != null ? DateTime.parse(map['endDate']) : null,
-        maxOrderQuantityForOffer = map['maxOrderQuantityForOffer'];
+  Map<String, dynamic> toJson() {
+    return {
+      'productId': productId,
+      'name': name,
+      'classification': classification,
+      'imageUrl': imageUrl,
+      'note': note,
+      'manufacturer': manufacturer,
+      'size': size,
+      'package': package,
+      'price': price,
+      'offerPrice': offerPrice,
+      'maxOrderQuantity': maxOrderQuantity,
+      'minOrderQuantity': minOrderQuantity,
+      'maxOrderQuantityForOffer': maxOrderQuantityForOffer,
+      'salesCount': salesCount,
+      'isOnSale': isOnSale,
+      'availability': availability,
+      'endDate': endDate?.toIso8601String(),
+    };
+  }
 }

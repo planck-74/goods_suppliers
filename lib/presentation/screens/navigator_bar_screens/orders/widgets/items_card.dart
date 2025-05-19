@@ -3,8 +3,7 @@ import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/data/models/order_model.dart';
 
 class ItemsCard extends StatefulWidget {
-  final Map<String, dynamic>? staticData;
-  final Map<String, dynamic> dynamicData;
+  final Map<String, dynamic> product;
   final TextEditingController controller;
   final int itemCount;
   final int index;
@@ -12,8 +11,7 @@ class ItemsCard extends StatefulWidget {
 
   const ItemsCard({
     super.key,
-    required this.staticData,
-    required this.dynamicData,
+    required this.product,
     required this.controller,
     required this.itemCount,
     required this.index,
@@ -30,26 +28,25 @@ class _ItemsCardState extends State<ItemsCard> {
   @override
   void initState() {
     super.initState();
-    product.addAll(widget.dynamicData);
-    if (widget.staticData != null) {
-      product.addAll(widget.staticData!);
-    }
+    product['product'].addAll(widget.product['product']);
+    product['product'].addAll(widget.product['product']);
   }
 
   int calculateProductTotal() {
-    int normalPrice = widget.dynamicData['price'] ?? 0;
-    int offerPrice = widget.dynamicData['offerPrice'] ?? normalPrice;
+    int normalPrice = widget.product['product']['price'] ?? 0;
+    int offerPrice = widget.product['product']['offerPrice'] ?? normalPrice;
     int quantity = int.tryParse(widget.controller.text) ?? 0;
-    int minOrderQuantity = widget.dynamicData['minOrderQuantity'] ?? 1;
-    int maxOrderQuantity = widget.dynamicData['maxOrderQuantity'] ?? 10000;
+    int minOrderQuantity = widget.product['product']['minOrderQuantity'] ?? 1;
+    int maxOrderQuantity =
+        widget.product['product']['maxOrderQuantity'] ?? 10000;
     int maxOfferQty =
-        widget.dynamicData['maxOrderQuantityForOffer'] ?? quantity;
+        widget.product['product']['maxOrderQuantityForOffer'] ?? quantity;
 
     // Clamp the quantity between the minimum and maximum allowed.
     if (quantity < minOrderQuantity) quantity = minOrderQuantity;
     if (quantity > maxOrderQuantity) quantity = maxOrderQuantity;
 
-    bool isOnSale = widget.dynamicData['isOnSale'] ?? false;
+    bool isOnSale = widget.product['product']['isOnSale'] ?? false;
     int productTotal = 0;
 
     if (isOnSale) {
@@ -66,15 +63,14 @@ class _ItemsCardState extends State<ItemsCard> {
   }
 
   Widget _buildProductImage() {
-    if (widget.staticData != null &&
-        widget.staticData!.containsKey('imageUrl')) {
+    if (widget.product['product'].containsKey('imageUrl')) {
       return SizedBox(
         height: 100,
         width: 100,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8.0),
           child: Image.network(
-            widget.staticData!['imageUrl'],
+            widget.product['product']['imageUrl'],
             fit: BoxFit.fitWidth,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
@@ -120,16 +116,16 @@ class _ItemsCardState extends State<ItemsCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.staticData?['name'] ?? '',
+              widget.product['product']['name'] ?? '',
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
-            if (widget.staticData?['size'] != null) ...[
+            if (widget.product['product']['size'] != null) ...[
               const SizedBox(height: 4),
               Text(
-                widget.staticData?['size'] ?? '',
+                widget.product['product']['size'] ?? '',
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],

@@ -8,13 +8,16 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
 
   List<Map<String, dynamic>>? productData;
   List<Map<String, dynamic>> filteredProducts = [];
+  List<QueryDocumentSnapshot> UnAvailableProducts = [];
 
   void filterProducts(String filterType, String value) async {
     filteredProducts.clear();
     emit(UnavailableLoading());
     await Future<void>.delayed(const Duration(milliseconds: 50));
-    for (var product in combinedProducts) {
-      if (product['staticData'][filterType] == value) {
+    for (var product
+        in UnAvailableProducts.map((doc) => doc.data() as Map<String, dynamic>)
+            .toList()) {
+      if (product[filterType] == value) {
         filteredProducts.add(product);
       }
     }
@@ -22,9 +25,9 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
   }
 
   // unavailable products
-  Future<List<QueryDocumentSnapshot<Object?>>?> unavailable(
+  Future<List<QueryDocumentSnapshot<Object?>>?> UnAvailable(
       String storeId) async {
-    List<QueryDocumentSnapshot> unAvailableProducts = [];
+    UnAvailableProducts = [];
 
     if (storeId.isNotEmpty) {
       CollectionReference productsRef = FirebaseFirestore.instance
@@ -34,69 +37,21 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
 
       QuerySnapshot querySnapshot =
           await productsRef.where('availability', isEqualTo: false).get();
-      unAvailableProducts = querySnapshot.docs;
-      print(
-          'Unavailable products fetched: ${unAvailableProducts.length} found');
-      return unAvailableProducts;
+      UnAvailableProducts = querySnapshot.docs;
+      emit(UnavailableLoaded(
+          UnAvailableProducts.map((doc) => doc.data() as Map<String, dynamic>)
+              .toList()));
+
+      return UnAvailableProducts;
     }
 
     return null;
   }
 
-  Future<DocumentSnapshot?> fetchStaticProduct(String productId) async {
-    final CollectionReference ref =
-        FirebaseFirestore.instance.collection('products');
-
-    final QuerySnapshot snapshot =
-        await ref.where('productId', isEqualTo: productId).get();
-
-    if (snapshot.docs.isNotEmpty) {
-      return snapshot.docs.first; // Return the first document found
-    } else {
-      return null; // Return null if no document is found
-    }
-  }
-
-  Future<void> fetchCombinedProducts(String storeId) async {
-    combinedProducts.clear();
-
-    emit(UnavailableLoading());
-
-    final userProducts = await unavailable(storeId);
-    productData = combinedProducts;
-
-    if (userProducts != null) {
-      for (var userProduct in userProducts) {
-        var dynamicData = userProduct.data() as Map<String, dynamic>;
-        String productId = dynamicData['productId'];
-
-        try {
-          var staticProduct = await fetchStaticProduct(productId);
-
-          // Check if the static product is not null before accessing properties
-          if (staticProduct != null && staticProduct.exists) {
-            var staticData = staticProduct.data() as Map<String, dynamic>;
-
-            combinedProducts.add({
-              'dynamicData': dynamicData,
-              'staticData': staticData,
-            });
-          } else {}
-        } catch (e) {
-          emit(UnavailableError(
-              'Failed to fetch static product for ID $productId: $e'));
-        }
-      }
-      emit(UnavailableLoaded(combinedProducts)); // Emit the combined products
-    } else {
-      // Emit an empty list if there are no products
-    }
-  }
-
   void eliminateProduct({required int index}) {
     if (productData != null && index >= 0 && index < productData!.length) {
       productData!.removeAt(index);
-      emit(UnavailableLoaded(productData!)); // Emit the updated list
+      emit(UnavailableLoaded(productData!));
     } else {
       print(
           'Cannot eliminate product: productData is null or index is out of bounds.');

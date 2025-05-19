@@ -88,7 +88,7 @@ class _SheetClassificationOfferState extends State<SheetClassificationOffer> {
         setState(() {
           if (isSelected) {
             selectedItem = null;
-            offerCubit.fetchCombinedOnSaleProducts(storeId);
+            offerCubit.fetchOnSaleProducts(storeId);
           } else {
             selectedItem = item;
             offerCubit.filterProducts(filterType, selectedItem!);

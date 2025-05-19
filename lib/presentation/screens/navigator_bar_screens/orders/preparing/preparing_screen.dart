@@ -155,7 +155,7 @@ class _PreparingState extends State<Preparing> {
 /// Called when an order is marked as done (delivered).
 void orderDone(BuildContext context, dynamic order) async {
   final ordersCubit = BlocProvider.of<OrdersCubit>(context);
-
+  List<String> Ids = [];
   // Update the order state in Firestore.
   ordersCubit.updateState(order.orderCode.toString(), 'تم التوصيل');
   ordersCubit.ordersDone.add(order);
@@ -165,16 +165,11 @@ void orderDone(BuildContext context, dynamic order) async {
   final products = currentOrder.products;
 
   for (var product in products) {
-    final docId = product['staticData']['docId'];
-    final controller = product['controller'];
-
-    if (docId != null && controller != null) {
-      // Call your function to update sales count.
-      await updateSaleCount(FirebaseFirestore.instance, docId, controller);
-    } else {
-      print("Incomplete product data: docId or controller is missing.");
-    }
+    final productId = product['product']['productId'];
+    Ids.add(productId);
   }
+  print(Ids.length);
+  updateSaleCount(Ids);
 }
 
 /// Called when an order is cancelled.
@@ -185,19 +180,25 @@ void cancel(BuildContext context, dynamic order) {
   ordersCubit.ordersPreparing.remove(order);
 }
 
-/// Example updateSaleCount function. Ensure you adjust this to your actual implementation.
-Future<void> updateSaleCount(
-    FirebaseFirestore ref, String docId, int controller) async {
+Future<void> updateSaleCount(List<String> ids) async {
   try {
-    final docSnapshot = await ref.collection('products').doc(docId).get();
-    if (docSnapshot.exists) {
-      await docSnapshot.reference.update({
-        'salesCount': FieldValue.increment(controller),
-      });
-      print("Sales count updated successfully.");
-    } else {
-      print("No document found for docId: $docId");
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('stores')
+        .doc(storeId)
+        .collection('products')
+        .where(FieldPath.documentId, whereIn: ids)
+        .get();
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    for (final doc in querySnapshot.docs) {
+      final currentSales = doc.data()['salesCount'] ?? 0;
+      final docRef = doc.reference;
+      batch.update(docRef, {'salesCount': currentSales + 1});
     }
+
+    await batch.commit();
+    print('Sales count updated for ${ids.length} products.');
   } catch (e) {
     print('Error updating sales count: $e');
   }

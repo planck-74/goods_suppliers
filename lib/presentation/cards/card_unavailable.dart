@@ -2,18 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/sheets/sheet_unavailable.dart';
 
-Widget unAvailableCard(
-  Map<String, dynamic> staticData,
-  BuildContext context,
-  Map<String, dynamic> dynamicData, {
-  required List productData,
+Widget unAvailableCard({
+  required Map<String, dynamic> product,
   required int index,
+  required List productData,
+  required BuildContext context,
 }) {
-  final Map<String, dynamic> product = {
-    ...dynamicData,
-    ...staticData,
-  };
-
   return Padding(
     padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
     child: Container(
@@ -36,7 +30,7 @@ Widget unAvailableCard(
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              ProductImage(imageUrl: staticData['imageUrl']),
+              ProductImage(imageUrl: product['imageUrl']),
               Padding(
                 padding: const EdgeInsets.all(6.0),
                 child: Container(
@@ -49,8 +43,7 @@ Widget unAvailableCard(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: ProductDetails(
-                    staticData: staticData,
-                    dynamicData: dynamicData,
+                    product: product,
                   ),
                 ),
               ),
@@ -124,19 +117,17 @@ class ProductImage extends StatelessWidget {
 }
 
 class ProductDetails extends StatelessWidget {
-  final Map<String, dynamic> staticData;
-  final Map<String, dynamic> dynamicData;
+  final Map<String, dynamic> product;
 
   const ProductDetails({
     super.key,
-    required this.staticData,
-    required this.dynamicData,
+    required this.product,
   });
 
   @override
   Widget build(BuildContext context) {
-    final String title = '${staticData['name']}'
-        '${staticData['size'] != null ? ' - ${staticData['size']}' : ''}';
+    final String title = '${product['name']}'
+        '${product['size'] != null ? ' - ${product['size']}' : ''}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,17 +143,17 @@ class ProductDetails extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${dynamicData['price']} جـ',
+          '${product['price']} جـ',
           style: const TextStyle(color: Colors.lightGreen, fontSize: 18),
         ),
         const SizedBox(height: 4),
         Text(
-          'أقل كمية للطلب: ${dynamicData['minOrderQuantity']}',
+          'أقل كمية للطلب: ${product['minOrderQuantity']}',
           style: const TextStyle(color: Colors.grey, fontSize: 12),
         ),
         const SizedBox(height: 4),
         Text(
-          'أقصي كمية للطلب: ${dynamicData['maxOrderQuantity']}',
+          'أقصي كمية للطلب: ${product['maxOrderQuantity']}',
           style: const TextStyle(color: Colors.grey, fontSize: 12),
         ),
       ],

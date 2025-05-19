@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 int calculateTotalWithOffer(List products) {
   int total = 0;
   for (var product in products) {
-    if (product is Map &&
-        product.containsKey('dynamicData') &&
-        product.containsKey('controller')) {
+    if (product is Map && product.containsKey('controller')) {
       // Get the normal price as an integer.
-      int normalPrice = product['dynamicData']['price'] ?? 0;
+      int normalPrice = product['price'] ?? 0;
 
       // Extract the quantity from the controller.
       int quantity = product['controller'] is TextEditingController
@@ -15,14 +13,13 @@ int calculateTotalWithOffer(List products) {
           : product['controller'] ?? 0;
 
       // Check if the product is on sale.
-      bool isOnSale = product['dynamicData']['isOnSale'] ?? false;
+      bool isOnSale = product['isOnSale'] ?? false;
       if (isOnSale) {
         // Retrieve the offer price if available, or fallback to the normal price.
-        int offerPrice = product['dynamicData']['offerPrice'] ?? normalPrice;
+        int offerPrice = product['offerPrice'] ?? normalPrice;
 
         // Retrieve the maximum quantity allowed for the offer.
-        int maxOfferQty =
-            product['dynamicData']['maxOrderQuantityForOffer'] ?? quantity;
+        int maxOfferQty = product['maxOrderQuantityForOffer'] ?? quantity;
 
         if (quantity <= maxOfferQty) {
           total += offerPrice * quantity;

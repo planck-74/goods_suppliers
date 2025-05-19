@@ -3,8 +3,7 @@ import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/data/models/order_model.dart';
 
 class PreparingItemsCard extends StatefulWidget {
-  final Map<String, dynamic>? staticData;
-  final Map<String, dynamic> dynamicData;
+  final Map<String, dynamic> product;
   final TextEditingController controller;
   final List<int> initControllers;
   final List<TextEditingController> controllers;
@@ -18,8 +17,7 @@ class PreparingItemsCard extends StatefulWidget {
 
   const PreparingItemsCard({
     super.key,
-    required this.staticData,
-    required this.dynamicData,
+    required this.product,
     required this.controller,
     required this.itemCount,
     required this.index,
@@ -42,10 +40,8 @@ class _PreparingItemsCardState extends State<PreparingItemsCard> {
   @override
   void initState() {
     super.initState();
-    product.addAll(widget.dynamicData);
-    if (widget.staticData != null) {
-      product.addAll(widget.staticData!);
-    }
+    product.addAll(widget.product);
+    product.addAll(widget.product!);
   }
 
   /// Calculates the total price for this product based on:
@@ -53,19 +49,18 @@ class _PreparingItemsCardState extends State<PreparingItemsCard> {
   /// - Clamping the quantity between minOrderQuantity and maxOrderQuantity.
   /// - Applying offer price up to maxOrderQuantityForOffer (if on sale).
   int calculateProductTotal() {
-    int normalPrice = widget.dynamicData['price'] ?? 0;
-    int offerPrice = widget.dynamicData['offerPrice'] ?? normalPrice;
+    int normalPrice = widget.product['price'] ?? 0;
+    int offerPrice = widget.product['offerPrice'] ?? normalPrice;
     int quantity = int.tryParse(widget.controller.text) ?? 0;
-    int minOrderQuantity = widget.dynamicData['minOrderQuantity'] ?? 1;
-    int maxOrderQuantity = widget.dynamicData['maxOrderQuantity'] ?? 10000;
-    int maxOfferQty =
-        widget.dynamicData['maxOrderQuantityForOffer'] ?? quantity;
+    int minOrderQuantity = widget.product['minOrderQuantity'] ?? 1;
+    int maxOrderQuantity = widget.product['maxOrderQuantity'] ?? 10000;
+    int maxOfferQty = widget.product['maxOrderQuantityForOffer'] ?? quantity;
 
     // Clamp the quantity between the minimum and maximum allowed.
     if (quantity < minOrderQuantity) quantity = minOrderQuantity;
     if (quantity > maxOrderQuantity) quantity = maxOrderQuantity;
 
-    bool isOnSale = widget.dynamicData['isOnSale'] ?? false;
+    bool isOnSale = widget.product['isOnSale'] ?? false;
     int productTotal = 0;
 
     if (isOnSale) {
@@ -82,15 +77,14 @@ class _PreparingItemsCardState extends State<PreparingItemsCard> {
   }
 
   Widget _buildProductImage() {
-    if (widget.staticData != null &&
-        widget.staticData!.containsKey('imageUrl')) {
+    if (widget.product.containsKey('imageUrl')) {
       return SizedBox(
         height: 120,
         width: 120,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8.0),
           child: Image.network(
-            widget.staticData!['imageUrl'],
+            widget.product['imageUrl'],
             fit: BoxFit.fitWidth,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
@@ -148,8 +142,7 @@ class _PreparingItemsCardState extends State<PreparingItemsCard> {
                   const SizedBox(width: 12.0),
                   buildProductDetails(
                       context: context,
-                      staticData: widget.staticData,
-                      dynamicData: widget.dynamicData,
+                      product: widget.product,
                       controller: widget.controller,
                       calculateProductTotal: calculateProductTotal),
                 ],
@@ -164,8 +157,7 @@ class _PreparingItemsCardState extends State<PreparingItemsCard> {
 
 Widget buildProductDetails(
     {required context,
-    required staticData,
-    required dynamicData,
+    required product,
     required controller,
     required calculateProductTotal}) {
   return Expanded(
@@ -175,7 +167,7 @@ Widget buildProductDetails(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '${staticData?['name'] ?? ''} - ${staticData?['size'] != null ? '${staticData?['size']}' : ''}${staticData?['note'] != null && staticData?['note'] != '' ? '(${staticData?['note']})' : ''}',
+            '${product?['name'] ?? ''} - ${product?['size'] != null ? '${product?['size']}' : ''}${product?['note'] != null && product?['note'] != '' ? '(${product?['note']})' : ''}',
             style: Theme.of(context)
                 .textTheme
                 .titleMedium
@@ -188,18 +180,17 @@ Widget buildProductDetails(
                 'السعر: ',
                 style: TextStyle(color: Colors.blueGrey, fontSize: 14),
               ),
-              Text('${dynamicData['price']} جـ'),
+              Text('${product['price']} جـ'),
             ],
           ),
-          if (dynamicData['offerPrice'] != null &&
-              dynamicData['offerPrice'] != '') ...[
+          if (product['offerPrice'] != null && product['offerPrice'] != '') ...[
             Row(
               children: [
                 const Text(
                   'سعر العرض: ',
                   style: TextStyle(color: Colors.blueGrey, fontSize: 14),
                 ),
-                Text('${dynamicData['offerPrice']} جـ'),
+                Text('${product['offerPrice']} جـ'),
               ],
             ),
           ],
@@ -212,15 +203,15 @@ Widget buildProductDetails(
               Text('${controller.text}'),
             ],
           ),
-          if (dynamicData['maxOrderQuantityForOffer'] != null &&
-              dynamicData['maxOrderQuantityForOffer'] != '') ...[
+          if (product['maxOrderQuantityForOffer'] != null &&
+              product['maxOrderQuantityForOffer'] != '') ...[
             Row(
               children: [
                 const Text(
                   'أقصي قمية للعرض: ',
                   style: TextStyle(color: Colors.blueGrey, fontSize: 14),
                 ),
-                Text('${dynamicData['maxOrderQuantityForOffer']}'),
+                Text('${product['maxOrderQuantityForOffer']}'),
               ],
             ),
           ],

@@ -24,16 +24,16 @@ class _OrState extends State<OrdersDoneCanceledItems> {
   Widget build(BuildContext context) {
     List<Map> selectedProducts = context.read<OrdersCubit>().selectedProducts;
 
-    List<bool> selectionList = context.read<OrdersCubit>().selectionList;
+    // List<bool> selectionList = context.read<OrdersCubit>().selectionList;
 
     final Map<String, dynamic> data =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final ClientModel client = data['client'];
     final OrderModel order = data['order'];
-    int countTrueValues(List<bool> list) {
-      // Filter the list for true values and get the length of the filtered list
-      return list.where((item) => item == true).length;
-    }
+    // int countTrueValues(List<bool> list) {
+    //   // Filter the list for true values and get the length of the filtered list
+    //   return list.where((item) => item == true).length;
+    // }
 
     return Scaffold(
       backgroundColor: whiteColor,
@@ -59,8 +59,7 @@ class _OrState extends State<OrdersDoneCanceledItems> {
                   children: List.generate(order.products.length, (index) {
                     return ItemsCard(
                       itemCount: order.products.length,
-                      staticData: order.products[index]['staticData'],
-                      dynamicData: order.products[index]['dynamicData'],
+                      product: order.products[index],
                       controller: controllers.isNotEmpty
                           ? controllers[index]
                           : TextEditingController(),

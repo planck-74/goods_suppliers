@@ -8,16 +8,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/presentation/sheets/sheet_offer.dart';
 
 class OfferCard extends StatefulWidget {
-  final Map<String, dynamic>? staticData;
-  final Map<String, dynamic> dynamicData;
+  final Map<String, dynamic> product;
   final String storeId;
   final int index;
   final List productData;
 
   const OfferCard({
     super.key,
-    required this.staticData,
-    required this.dynamicData,
+    required this.product,
     required this.storeId,
     required this.productData,
     required this.index,
@@ -33,23 +31,20 @@ class _OfferCardState extends State<OfferCard> {
   @override
   void initState() {
     super.initState();
-    product.addAll(widget.dynamicData); // إضافة البيانات الديناميكية
-    if (widget.staticData != null) {
-      product.addAll(widget.staticData!); // إضافة البيانات الثابتة إن وجدت
-    }
+    product.addAll(widget.product); // إضافة البيانات الديناميكية
+    product.addAll(widget.product!); // إضافة البيانات الثابتة إن وجدت
   }
 
   /// يعرض صورة المنتج مع التعامل مع حالات التحميل والأخطاء
   Widget _buildProductImage() {
-    if (widget.staticData != null &&
-        widget.staticData!.containsKey('imageUrl')) {
+    if (widget.product.containsKey('imageUrl')) {
       return SizedBox(
         height: 115,
         width: 100,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8.0),
           child: Image.network(
-            widget.staticData!['imageUrl'],
+            widget.product['imageUrl'],
             fit: BoxFit.cover,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
@@ -83,9 +78,9 @@ class _OfferCardState extends State<OfferCard> {
     }
   }
 
-  Widget _buildProductDetails(Map<String, dynamic>? staticData) {
-    final String title = '${staticData?['name']}'
-        '${staticData?['size'] != null ? ' - ${staticData?['size']}' : ''}';
+  Widget _buildProductDetails(Map<String, dynamic>? product) {
+    final String title = '${product?['name']}'
+        '${product?['size'] != null ? ' - ${product?['size']}' : ''}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,12 +97,12 @@ class _OfferCardState extends State<OfferCard> {
         Row(
           children: [
             Text(
-              '${widget.dynamicData['offerPrice']} جـ',
+              '${widget.product['offerPrice']} جـ',
               style: const TextStyle(color: Colors.lightGreen, fontSize: 20),
             ),
             const SizedBox(width: 10),
             Text(
-              '${widget.dynamicData['price']} ',
+              '${widget.product['price']} ',
               style: const TextStyle(
                 color: Colors.grey,
                 fontSize: 20,
@@ -118,17 +113,17 @@ class _OfferCardState extends State<OfferCard> {
         ),
         const SizedBox(height: 4),
         Text(
-          'أقصى كمية لطلب العرض: ${widget.dynamicData['maxOrderQuantityForOffer']}',
+          'أقصى كمية لطلب العرض: ${widget.product['maxOrderQuantityForOffer']}',
           style: const TextStyle(color: darkBlueColor, fontSize: 14),
         ),
         const SizedBox(height: 2),
         Text(
-          'أقصى كمية للطلب: ${widget.dynamicData['maxOrderQuantity']}',
+          'أقصى كمية للطلب: ${widget.product['maxOrderQuantity']}',
           style: const TextStyle(color: Colors.grey, fontSize: 14),
         ),
         const SizedBox(height: 4),
         Text(
-          'أقل كمية للطلب: ${widget.dynamicData['minOrderQuantity']}',
+          'أقل كمية للطلب: ${widget.product['minOrderQuantity']}',
           style: const TextStyle(color: Colors.grey, fontSize: 14),
         ),
       ],
@@ -160,7 +155,7 @@ class _OfferCardState extends State<OfferCard> {
                     await context.read<DynamicProductCubit>().removeOffer(
                           context,
                           widget.storeId,
-                          widget.dynamicData['productId'],
+                          widget.product['productId'],
                         );
                     context
                         .read<AvailableCubit>()
@@ -217,7 +212,7 @@ class _OfferCardState extends State<OfferCard> {
                 const SizedBox(width: 6),
                 // Wrapping details with Expanded ensures it adapts within available space.
                 Expanded(
-                  child: _buildProductDetails(widget.staticData),
+                  child: _buildProductDetails(widget.product),
                 ),
               ],
             ),

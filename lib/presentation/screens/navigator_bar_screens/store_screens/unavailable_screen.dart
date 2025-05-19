@@ -19,7 +19,7 @@ class _UnAvailableState extends State<UnAvailable> {
   @override
   void initState() {
     super.initState();
-    context.read<UnAvailableCubit>().fetchCombinedProducts(storeId);
+    context.read<UnAvailableCubit>().UnAvailable(storeId);
   }
 
   @override
@@ -81,7 +81,7 @@ class _UnAvailableState extends State<UnAvailable> {
                       customOutlinedButton(
                         onPressed: () => context
                             .read<UnAvailableCubit>()
-                            .fetchCombinedProducts(storeId),
+                            .UnAvailable(storeId),
                         width: 57,
                         height: 25,
                         context: context,
@@ -114,9 +114,7 @@ class _UnAvailableState extends State<UnAvailable> {
             child: RefreshIndicator(
               color: primaryColor,
               onRefresh: () async {
-                return context
-                    .read<UnAvailableCubit>()
-                    .fetchCombinedProducts(storeId);
+                await context.read<UnAvailableCubit>().UnAvailable(storeId);
               },
               child: BlocBuilder<UnAvailableCubit, UnAvailableState>(
                 builder: (context, state) {

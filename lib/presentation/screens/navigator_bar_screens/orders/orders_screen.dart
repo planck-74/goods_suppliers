@@ -59,67 +59,6 @@ class _ordersState extends State<Orders> {
                       ),
                     ]),
               ),
-              // Row(
-              //   children: [
-              //     Padding(
-              //       padding: const EdgeInsets.all(8.0),
-              //       child: Row(
-              //         children: [
-              //           customOutlinedButton(
-              //             width: 65,
-              //             height: 25,
-              //             context: context,
-              //             child: const Row(
-              //               mainAxisSize: MainAxisSize
-              //                   .min, // Adjust the size based on content
-              //               mainAxisAlignment: MainAxisAlignment
-              //                   .center, // Center content horizontally
-              //               children: [
-              //                 Text(
-              //                   'تصنيف',
-              //                   style: TextStyle(color: darkBlueColor),
-              //                 ),
-              //                 SizedBox(
-              //                   width: 5,
-              //                 ),
-              //                 ImageIcon(
-              //                     size: 12,
-              //                     color: primaryColor,
-              //                     AssetImage(
-              //                       'assets/icons/triangle.png',
-              //                     ))
-              //               ],
-              //             ),
-              //           ),
-              //           const SizedBox(
-              //             width: 6,
-              //           ),
-              //           customOutlinedButton(
-              //             width: 45,
-              //             height: 25,
-              //             context: context,
-              //             child: const Row(
-              //               mainAxisSize: MainAxisSize
-              //                   .min, // Adjust the size based on content
-              //               mainAxisAlignment: MainAxisAlignment
-              //                   .center, // Center content horizontally
-              //               children: [
-              //                 Text(
-              //                   '  إلغاء',
-              //                   style: TextStyle(color: darkBlueColor),
-              //                 ),
-              //                 SizedBox(
-              //                   width: 5,
-              //                 ),
-              //               ],
-              //             ),
-              //           )
-              //         ],
-              //       ),
-              //     )
-              //   ],
-              // ),
-
               const Flexible(
                 child: TabBarView(
                   children: [

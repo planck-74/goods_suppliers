@@ -10,7 +10,7 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
   DynamicProductCubit() : super(DynamicProductInitial());
 
   Future<void> addDynamicProduct(
-      BuildContext context, StoreProduct storeProduct, String storeId,
+      BuildContext context, Product storeProduct, String storeId,
       {required String message}) async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
 
@@ -21,7 +21,7 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
           .doc(storeId)
           .collection('products')
           .doc(storeProduct.productId)
-          .set(storeProduct.toMap());
+          .set(storeProduct.toJson());
       showCustomPositionedSnackBar(
           context: context, title: 'تمت', message: message);
       emit(DynamicProductLoaded());
@@ -90,19 +90,29 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
     }
   }
 
-  Future<void> updataOffer(
-      {required BuildContext context,
-      required String productId,
-      required int maxOrderQuantityForOffer,
-      required int offerPrice,
-      required int price,
-      required int maxOrderQuantity,
-      required int minOrderQuantity}) async {
+  Future<void> updateOffer({
+    required BuildContext context,
+    required String productId,
+    required int maxOrderQuantityForOffer,
+    required int offerPrice,
+    required int price,
+    required int maxOrderQuantity,
+    required int minOrderQuantity,
+    required String name,
+    required bool isOnSale,
+    required bool availability,
+    required String classification,
+    required String imageUrl,
+    required String manufacturer,
+    required String note,
+    required String package,
+    required int salesCount,
+    required String size,
+    DateTime? endDate, // nullable
+  }) async {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
 
     try {
-      // print('hello every one');
-
       emit(DynamicProductLoading());
 
       await firestore
@@ -111,6 +121,18 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
           .collection('products')
           .doc(productId)
           .update({
+        'productId': productId,
+        'name': name,
+        'isOnSale': isOnSale,
+        'availability': availability,
+        'classification': classification,
+        'imageUrl': imageUrl,
+        'manufacturer': manufacturer,
+        'note': note,
+        'package': package,
+        'salesCount': salesCount,
+        'size': size,
+        'endDate': endDate?.toIso8601String(), // handle null safely
         'maxOrderQuantityForOffer': maxOrderQuantityForOffer,
         'offerPrice': offerPrice,
         'price': price,
@@ -121,7 +143,7 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
       emit(DynamicProductLoaded());
     } catch (e) {
       emit(DynamicProductError(
-          'Failed to mark product as unavailable: ${e.toString()}'));
+          'Failed to update product offer: ${e.toString()}'));
     }
   }
 }

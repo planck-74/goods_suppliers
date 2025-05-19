@@ -90,7 +90,7 @@ class _SheetClassificationState extends State<SheetClassificationAvailable> {
         setState(() {
           if (isSelected) {
             selectedItem = null;
-            availableCubit.fetchCombinedProducts(storeId);
+            availableCubit.available(storeId);
           } else {
             selectedItem = item;
             availableCubit.filterProducts(filterType, selectedItem!);

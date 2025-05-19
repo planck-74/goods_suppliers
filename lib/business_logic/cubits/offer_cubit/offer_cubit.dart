@@ -15,13 +15,15 @@ class OfferCubit extends Cubit<OfferState> {
   Map<String, dynamic> size_unit = {};
   List<Map<String, dynamic>> combinedProducts = [];
   List<Map<String, dynamic>> filteredProducts = [];
-
+  List<QueryDocumentSnapshot> onSaleProducts = [];
   void filterProducts(String filterType, String value) async {
     filteredProducts.clear();
     emit(OfferLoading());
     await Future<void>.delayed(const Duration(milliseconds: 50));
-    for (var product in combinedProducts) {
-      if (product['staticData'][filterType] == value) {
+    for (var product in onSaleProducts
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .toList()) {
+      if (product[filterType] == value) {
         filteredProducts.add(product);
       }
     }
@@ -88,7 +90,7 @@ class OfferCubit extends Cubit<OfferState> {
 
   Future<List<QueryDocumentSnapshot<Object?>>?> fetchOnSaleProducts(
       String storeId) async {
-    List<QueryDocumentSnapshot> onSaleProducts = [];
+    onSaleProducts = [];
 
     if (storeId.isNotEmpty) {
       CollectionReference productsRef = FirebaseFirestore.instance
@@ -101,66 +103,13 @@ class OfferCubit extends Cubit<OfferState> {
           await productsRef.where('isOnSale', isEqualTo: true).get();
 
       onSaleProducts = querySnapshot.docs;
-
+      emit(OfferLoaded(onSaleProducts
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList()));
       return onSaleProducts;
     }
 
     return null;
-  }
-
-  Future<DocumentSnapshot?> fetchStaticProduct(String productId) async {
-    final CollectionReference ref =
-        FirebaseFirestore.instance.collection('products');
-
-    final QuerySnapshot snapshot =
-        await ref.where('productId', isEqualTo: productId).get();
-
-    if (snapshot.docs.isNotEmpty) {
-      return snapshot.docs.first;
-    } else {
-      return null;
-    }
-  }
-
-  Future<void> fetchCombinedOnSaleProducts(String storeId) async {
-    emit(OfferLoading());
-
-    try {
-      final userProducts = await fetchOnSaleProducts(storeId);
-
-      // 🔹 Reset `combinedProducts` before adding new products
-      combinedProducts.clear();
-
-      if (userProducts != null) {
-        for (var userProduct in userProducts) {
-          var dynamicData = userProduct.data() as Map<String, dynamic>;
-          String productId = dynamicData['productId'];
-
-          try {
-            var staticProduct = await fetchStaticProduct(productId);
-
-            if (staticProduct != null && staticProduct.exists) {
-              var staticData = staticProduct.data() as Map<String, dynamic>;
-
-              combinedProducts.add({
-                'dynamicData': dynamicData,
-                'staticData': staticData,
-              });
-            }
-          } catch (e) {
-            emit(OfferError(
-                'Failed to fetch static product for ID $productId: $e'));
-          }
-        }
-
-        // 🔹 Ensure we send the correct data: either filtered or all products
-        emit(OfferLoaded(combinedProducts));
-      } else {
-        emit(OfferError('No on-sale products found.'));
-      }
-    } catch (e) {
-      emit(OfferError('Error fetching on-sale products: $e'));
-    }
   }
 
   void eliminateProduct({required int index}) {

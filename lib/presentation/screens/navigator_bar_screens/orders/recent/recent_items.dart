@@ -23,8 +23,7 @@ Widget recentItems({
             checkBoxValue:
                 selectionList.isNotEmpty ? selectionList[index] : true,
             itemCount: products.length,
-            staticData: products[index]['staticData'],
-            dynamicData: products[index]['dynamicData'],
+            product: products[index]['product'],
             initControllers: initControllers,
             controller: controllers.isNotEmpty
                 ? controllers[index]

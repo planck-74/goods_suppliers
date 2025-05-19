@@ -268,7 +268,7 @@ class _SheetUnavailableState extends State<SheetUnavailable> {
                     if (priceController.text != '0') {
                       context.read<DynamicProductCubit>().addDynamicProduct(
                             context,
-                            StoreProduct(
+                            Product(
                               productId: widget.product['productId'],
                               availability: isAvailable,
                               price: int.tryParse(priceController.text) ?? 0,
@@ -287,6 +287,14 @@ class _SheetUnavailableState extends State<SheetUnavailable> {
                                   : null,
                               endDate: checkBoxState ? selectedDate : null,
                               isOnSale: checkBoxState,
+                              name: widget.product['name'],
+                              classification: widget.product['classification'],
+                              imageUrl: widget.product['imageUrl'],
+                              note: widget.product['note'],
+                              manufacturer: widget.product['manufacturer'],
+                              size: widget.product['size'],
+                              package: widget.product['package'],
+                              salesCount: widget.product['salesCount'],
                             ),
                             storeId,
                             message: 'أصبح المنتج الان معروض للعميل',

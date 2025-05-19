@@ -26,14 +26,8 @@ class _offerProductsListState extends State<offerProductsList> {
     return ListView.builder(
       itemCount: productData.length,
       itemBuilder: (context, index) {
-        final dynamicData =
-            productData[index]['dynamicData'] as Map<String, dynamic>;
-        final staticData =
-            productData[index]['staticData'] as Map<String, dynamic>?;
-
         return OfferCard(
-          staticData: staticData,
-          dynamicData: dynamicData,
+          product: productData[index],
           storeId: widget.storeId,
           index: index,
           productData: productData,

@@ -321,22 +321,30 @@ class _ProductDetailFormState extends State<ProductDetailForm> {
   }
 
   /// دالة getStoreProduct لإرجاع نموذج المنتج إذا كان التحقق ناجح
-  StoreProduct? getStoreProduct() {
+  Product? getStoreProduct() {
     final price = int.tryParse(priceController.text) ?? 0;
     if (storeId == null || price <= 0) return null;
-    return StoreProduct(
+    return Product(
       productId: widget.product['productId'],
       availability: isAvailable,
-      price: price,
+      price: int.tryParse(priceController.text) ?? 0,
       maxOrderQuantity: int.tryParse(maxQuantityController.text) ?? 50,
       minOrderQuantity: int.tryParse(minQuantityController.text) ?? 1,
       offerPrice:
-          checkBoxState ? (int.tryParse(offerPriceController.text) ?? 0) : null,
+          checkBoxState ? int.tryParse(offerPriceController.text) ?? 0 : null,
       maxOrderQuantityForOffer: checkBoxState
-          ? (int.tryParse(maxQuantityControllerOffer.text) ?? 50)
+          ? int.tryParse(maxQuantityControllerOffer.text) ?? 50
           : null,
       endDate: checkBoxState ? selectedDate : null,
       isOnSale: checkBoxState,
+      name: widget.product['name'],
+      classification: widget.product['classification'],
+      imageUrl: widget.product['imageUrl'],
+      note: widget.product['note'],
+      manufacturer: widget.product['manufacturer'],
+      size: widget.product['size'],
+      package: widget.product['package'],
+      salesCount: widget.product['salesCount'],
     );
   }
 }

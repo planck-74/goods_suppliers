@@ -91,7 +91,7 @@ class _shState extends State<SheetClassificationUnavailable> {
         setState(() {
           if (isSelected) {
             selectedItem = null;
-            unavailableCubit.fetchCombinedProducts(storeId);
+            unavailableCubit.UnAvailable(storeId);
           } else {
             selectedItem = item;
             unavailableCubit.filterProducts(filterType, selectedItem!);

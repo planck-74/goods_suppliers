@@ -28,19 +28,12 @@ class _ListViewUnavailableState extends State<ListViewUnavailable> {
     return ListView.builder(
       itemCount: widget.data.length,
       itemBuilder: (context, index) {
-        // These keys already return maps, so no need for extra processing.
-        final dynamicData =
-            widget.data[index]['dynamicData'] as Map<String, dynamic>;
-        final staticData = widget.data[index]['staticData']
-            as Map<String, dynamic>?; // Nullable, if needed
-
+        
         return unAvailableCard(
-          staticData!,
-          context,
-          dynamicData,
-          index: index,
-          productData: widget.data,
-        );
+            context: context,
+            index: index,
+            productData: widget.data,
+            product: widget.data[index]);
       },
     );
   }

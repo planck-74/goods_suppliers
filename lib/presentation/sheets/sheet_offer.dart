@@ -27,7 +27,7 @@ class SheetOffer extends StatefulWidget {
 
 class _SheetOfferState extends State<SheetOffer> {
   bool isAvailable = true;
-  bool checkBoxState = false;
+  bool checkBoxState = true;
   DateTime? selectedDate;
 
   late TextEditingController priceController;
@@ -178,8 +178,9 @@ class _SheetOfferState extends State<SheetOffer> {
                   onPressed: () {
                     if (priceController.text != '0' &&
                         widget.product['productId'] != null) {
-                      context.read<DynamicProductCubit>().updataOffer(
+                      context.read<DynamicProductCubit>().updateOffer(
                             context: context,
+                            availability: isAvailable,
                             productId: widget.product['productId'],
                             maxOrderQuantityForOffer:
                                 int.tryParse(maxQuantityControllerOffer.text) ??
@@ -191,6 +192,15 @@ class _SheetOfferState extends State<SheetOffer> {
                                 int.tryParse(maxQuantityController.text) ?? 0,
                             minOrderQuantity:
                                 int.tryParse(minQuantityController.text) ?? 0,
+                            name: widget.product['name'],
+                            isOnSale: checkBoxState,
+                            classification: widget.product['classification'],
+                            imageUrl: widget.product['imageUrl'],
+                            note: widget.product['note'],
+                            manufacturer: widget.product['manufacturer'],
+                            size: widget.product['size'],
+                            package: widget.product['package'],
+                            salesCount: widget.product['salesCount'],
                           );
 
                       context

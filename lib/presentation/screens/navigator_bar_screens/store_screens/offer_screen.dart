@@ -19,7 +19,7 @@ class _OfferState extends State<Offer> {
   @override
   void initState() {
     super.initState();
-    context.read<OfferCubit>().fetchCombinedOnSaleProducts(storeId);
+    context.read<OfferCubit>().fetchOnSaleProducts(storeId);
   }
 
   @override
@@ -80,7 +80,7 @@ class _OfferState extends State<Offer> {
                       customOutlinedButton(
                         onPressed: () => context
                             .read<OfferCubit>()
-                            .fetchCombinedOnSaleProducts(storeId),
+                            .fetchOnSaleProducts(storeId),
                         width: 57,
                         height: 25,
                         context: context,
@@ -113,9 +113,7 @@ class _OfferState extends State<Offer> {
             child: RefreshIndicator(
               color: primaryColor,
               onRefresh: () async {
-                return context
-                    .read<OfferCubit>()
-                    .fetchCombinedOnSaleProducts(storeId);
+                await context.read<OfferCubit>().fetchOnSaleProducts(storeId);
               },
               child: BlocBuilder<OfferCubit, OfferState>(
                 builder: (context, state) {
