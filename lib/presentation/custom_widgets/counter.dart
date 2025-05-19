@@ -145,14 +145,24 @@ class AddProductCounter extends StatelessWidget {
                   border: InputBorder.none,
                 ),
                 onSubmitted: (String value) {
+                  final parsed =
+                      int.tryParse(value.trim()) ?? minLimit; // تنسيق رقمي نظيف
+                  // عدّل الكنترولر فوراً علشان يتماشى مع الـ state الجاي
+                  controller.text = parsed.toString();
+                  controller.selection =
+                      TextSelection.collapsed(offset: controller.text.length);
+
                   if (product != null) {
-                    final updatedProduct = {
-                      ...product!,
-                      theKey: int.tryParse(value) ?? 0,
-                    };
-                    context
-                        .read<AddProductCubit>()
-                        .updateProduct(updatedProduct);
+                    final currentValue = product![theKey] ?? 0;
+                    if (parsed != currentValue) {
+                      final updatedProduct = {
+                        ...product!,
+                        theKey: parsed,
+                      };
+                      context
+                          .read<AddProductCubit>()
+                          .updateProduct(updatedProduct);
+                    }
                   }
                 },
               ),

@@ -8,7 +8,7 @@ import 'package:goods/presentation/custom_widgets/custom_app_bar%20copy.dart';
 import 'package:goods/presentation/custom_widgets/custom_listview_builder_unavailable.dart';
 import 'package:goods/presentation/custom_widgets/custom_progress_indicator.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/store_screens/product_searchtext_field.dart';
-import 'package:goods/presentation/sheets/sheet_add_product.dart';
+import 'package:goods/presentation/screens/navigator_bar_screens/store_screens/add_products/sheet_add_product.dart';
 
 class AddProduct extends StatefulWidget {
   const AddProduct({super.key});
