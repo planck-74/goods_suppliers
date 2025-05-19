@@ -145,9 +145,8 @@ class AddProductCounter extends StatelessWidget {
                   border: InputBorder.none,
                 ),
                 onSubmitted: (String value) {
-                  final parsed =
-                      int.tryParse(value.trim()) ?? minLimit; // تنسيق رقمي نظيف
-                  // عدّل الكنترولر فوراً علشان يتماشى مع الـ state الجاي
+                  final parsed = int.tryParse(value.trim()) ?? minLimit;
+
                   controller.text = parsed.toString();
                   controller.selection =
                       TextSelection.collapsed(offset: controller.text.length);

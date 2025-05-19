@@ -32,7 +32,7 @@ class _OfferCardState extends State<OfferCard> {
   void initState() {
     super.initState();
     product.addAll(widget.product); // إضافة البيانات الديناميكية
-    product.addAll(widget.product!); // إضافة البيانات الثابتة إن وجدت
+    product.addAll(widget.product); // إضافة البيانات الثابتة إن وجدت
   }
 
   /// يعرض صورة المنتج مع التعامل مع حالات التحميل والأخطاء

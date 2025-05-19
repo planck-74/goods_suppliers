@@ -44,9 +44,7 @@ class _RecentItemsCardState extends State<RecentItemsCard> {
   void initState() {
     super.initState();
     product.addAll(widget.product);
-    if (widget.product != null) {
-      product.addAll(widget.product!);
-    }
+    product.addAll(widget.product!);
   }
 
   /// Calculates the total price for this product based on:
@@ -82,14 +80,14 @@ class _RecentItemsCardState extends State<RecentItemsCard> {
   }
 
   Widget _buildProductImage() {
-    if (widget.product != null && widget.product!.containsKey('imageUrl')) {
+    if (widget.product.containsKey('imageUrl')) {
       return SizedBox(
         height: 100,
         width: 100,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8.0),
           child: Image.network(
-            widget.product!['imageUrl'],
+            widget.product['imageUrl'],
             fit: BoxFit.fitWidth,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
@@ -137,7 +135,7 @@ class _RecentItemsCardState extends State<RecentItemsCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${widget.product?['name'] ?? ''} - ${widget.product?['size'] != null ? '${widget.product?['size']}' : ''}${widget.product?['note'] != null && widget.product?['note'] != '' ? '(${widget.product?['note']})' : ''}',
+              '${widget.product['name'] ?? ''} - ${widget.product['size'] != null ? '${widget.product['size']}' : ''}${widget.product['note'] != null && widget.product['note'] != '' ? '(${widget.product['note']})' : ''}',
               style: Theme.of(context)
                   .textTheme
                   .titleMedium

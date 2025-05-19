@@ -10,8 +10,6 @@ class AddProductsWidgets {
   AddProductsWidgets({
     required this.product,
     required this.formKey,
-    required this.isAvailable,
-    required this.checkBoxState,
     required this.selectedDate,
     required this.priceController,
     required this.maxQuantityController,
@@ -25,8 +23,7 @@ class AddProductsWidgets {
 
   final Map<String, dynamic> product;
   final GlobalKey<ProductDetailFormState> formKey;
-  bool isAvailable;
-  bool checkBoxState;
+
   DateTime? selectedDate;
   final TextEditingController priceController;
   final TextEditingController maxQuantityController;
@@ -36,7 +33,6 @@ class AddProductsWidgets {
   final String? storeId;
   final void Function(String key, dynamic value) updateProductField;
   final void Function(VoidCallback fn) setState;
-
   Widget buildProductInfoSection(Map<String, dynamic> product) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,11 +63,8 @@ class AddProductsWidgets {
           ),
         ),
         AvailabilitySwitch(
-          isAvailable: isAvailable,
+          isAvailable: product['availability'] ?? true,
           onToggle: (value) {
-            setState(() {
-              isAvailable = value;
-            });
             updateProductField('availability', value);
           },
         ),
@@ -80,20 +73,28 @@ class AddProductsWidgets {
   }
 
   Widget buildCheckbox() {
+    final isOnSale = product['isOnSale'] ?? false;
+
     return Row(
       children: [
         Checkbox(
           activeColor: Colors.red,
-          value: checkBoxState,
+          value: isOnSale,
           onChanged: (value) {
-            setState(() {
-              checkBoxState = value ?? false;
-            });
-            updateProductField('isOnSale', checkBoxState);
-            updateProductField(
-                'offerPrice', int.tryParse(offerPriceController.text) ?? 0);
-            updateProductField('maxOrderQuantityForOffer',
-                int.tryParse(maxQuantityControllerOffer.text) ?? 10);
+            final newValue = value ?? false;
+            updateProductField('isOnSale', newValue);
+
+            // تحديث القيم المرتبطة بالعرض في حالة التفعيل
+            if (newValue) {
+              updateProductField(
+                  'offerPrice', int.tryParse(offerPriceController.text) ?? 0);
+              updateProductField('maxOrderQuantityForOffer',
+                  int.tryParse(maxQuantityControllerOffer.text) ?? 10);
+            } else {
+              updateProductField('offerPrice', 0);
+              updateProductField('maxOrderQuantityForOffer', 0);
+              updateProductField('endDate', null);
+            }
           },
         ),
         const Text(
@@ -189,19 +190,22 @@ class AddProductsWidgets {
   Product? getStoreProduct() {
     final price = int.tryParse(priceController.text) ?? 0;
     if (storeId == null || price <= 0) return null;
+
+    final isOnSale = product['isOnSale'] ?? false;
+    final availability = product['availability'] ?? false;
+
     return Product(
       productId: product['productId'],
-      availability: isAvailable,
-      price: int.tryParse(priceController.text) ?? 0,
+      availability: availability,
+      price: price,
       maxOrderQuantity: int.tryParse(maxQuantityController.text) ?? 50,
       minOrderQuantity: int.tryParse(minQuantityController.text) ?? 1,
       offerPrice:
-          checkBoxState ? int.tryParse(offerPriceController.text) ?? 0 : null,
-      maxOrderQuantityForOffer: checkBoxState
-          ? int.tryParse(maxQuantityControllerOffer.text) ?? 50
-          : null,
-      endDate: checkBoxState ? selectedDate : null,
-      isOnSale: checkBoxState,
+          isOnSale ? int.tryParse(offerPriceController.text) ?? 0 : null,
+      maxOrderQuantityForOffer:
+          isOnSale ? int.tryParse(maxQuantityControllerOffer.text) ?? 50 : null,
+      endDate: isOnSale ? selectedDate : null,
+      isOnSale: isOnSale,
       name: product['name'],
       classification: product['classification'],
       imageUrl: product['imageUrl'],

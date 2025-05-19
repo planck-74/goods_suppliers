@@ -26,7 +26,6 @@ class _MultiSheetAddProductState extends State<MultiSheetAddProduct> {
             ? addState.selectedProducts.values.toList()
             : <Map<String, dynamic>>[];
 
-        // التأكد من إنشاء مفتاح لكل نموذج
         if (_formKeys.length != selectedProducts.length) {
           _formKeys.clear();
           for (int i = 0; i < selectedProducts.length; i++) {
@@ -70,7 +69,6 @@ class _MultiSheetAddProductState extends State<MultiSheetAddProduct> {
                                     children: [
                                       buildProductImage(
                                           context, product, 50, 40),
-                                      // Wrap the Column inside an Expanded widget
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment:
