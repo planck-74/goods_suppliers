@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 
-PreferredSize customAppBar(BuildContext context, Widget child) {
+PreferredSize customAppBar(BuildContext context, Widget child,
+    {List<IconButton>? actions}) {
   return PreferredSize(
     preferredSize: const Size.fromHeight(56.0), // Standard AppBar height
     child: Container(

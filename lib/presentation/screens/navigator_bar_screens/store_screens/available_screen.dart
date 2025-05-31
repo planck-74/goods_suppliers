@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/business_logic/cubits/available/available_cubit.dart';
 import 'package:goods/business_logic/cubits/available/available_state.dart';
+import 'package:goods/business_logic/cubits/dynamic_cubit/dynamic_product_cubit.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/custom_widgets/custom_buttons/custom_buttons.dart';
 import 'package:goods/presentation/custom_widgets/custom_listview_builder_available.dart';
@@ -41,9 +42,7 @@ class _AvailableState extends State<Available> {
             ),
             child: Row(
               children: [
-                const SizedBox(
-                  width: 12,
-                ),
+                const SizedBox(width: 12),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -55,30 +54,42 @@ class _AvailableState extends State<Available> {
                         height: 25,
                         context: context,
                         child: const Row(
-                          mainAxisSize: MainAxisSize
-                              .min, // Adjust the size based on content
-                          mainAxisAlignment: MainAxisAlignment
-                              .center, // Center content horizontally
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               '  تصنيف',
                               style: TextStyle(color: darkBlueColor),
                             ),
-                            SizedBox(
-                              width: 5,
-                            ),
+                            SizedBox(width: 5),
                             ImageIcon(
-                                size: 12,
-                                color: primaryColor,
-                                AssetImage(
-                                  'assets/icons/triangle.png',
-                                ))
+                              size: 12,
+                              color: primaryColor,
+                              AssetImage('assets/icons/triangle.png'),
+                            )
                           ],
                         ),
                       ),
-                      const SizedBox(
-                        width: 6,
+                      const SizedBox(width: 6),
+                      customOutlinedButton(
+                        onPressed: () => context
+                            .read<DynamicProductCubit>()
+                            .syncStoreProducts(context, storeId),
+                        width: 80,
+                        height: 25,
+                        context: context,
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'مزامنة 🔄',
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 6),
                       customOutlinedButton(
                         onPressed: () =>
                             context.read<AvailableCubit>().available(storeId),
@@ -86,21 +97,17 @@ class _AvailableState extends State<Available> {
                         height: 25,
                         context: context,
                         child: const Row(
-                          mainAxisSize: MainAxisSize
-                              .min, // Adjust the size based on content
-                          mainAxisAlignment: MainAxisAlignment
-                              .center, // Center content horizontally
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               'إلغاء ×',
                               style: TextStyle(color: primaryColor),
                             ),
-                            SizedBox(
-                              width: 5,
-                            ),
+                            SizedBox(width: 5),
                           ],
                         ),
-                      )
+                      ),
                     ],
                   ),
                 )
@@ -131,7 +138,7 @@ class _AvailableState extends State<Available> {
                             style: TextStyle(color: Colors.black),
                           ))
                         : AvailableProductsList(
-                            data: availableProducts, storeId: storeId ?? '');
+                            data: availableProducts, storeId: storeId);
                   }
                   return const Center(
                       child: Text(

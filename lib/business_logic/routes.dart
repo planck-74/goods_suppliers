@@ -22,6 +22,6 @@ final Map<String, WidgetBuilder> routes = {
   '/RecentItemsScreen': (context) => const RecentItemsScreen(),
   '/PreparingItemsScreen': (context) => const PreparingItemsScreen(),
   '/OrdersDoneCanceledItems': (context) => const OrdersDoneCanceledItems(),
-  '/ChatScreen': (context) => const ChatScreen(),
+  '/ChatScreen': (context) => const EnhancedChatScreen(),
   '/GetSupplierDetailsScreen': (context) => const GetSupplierDetailsScreen(),
 };

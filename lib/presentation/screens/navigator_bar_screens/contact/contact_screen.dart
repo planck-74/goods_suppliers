@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:goods/business_logic/cubits/get_client_data/get_client_data_cubit.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/custom_widgets/custom_app_bar%20copy.dart';
 import 'package:intl/intl.dart';
@@ -133,12 +135,15 @@ class Contact extends StatelessWidget {
                             ),
                             trailing: Text(formattedTime),
                             onTap: () {
+                              context
+                                  .read<GetClientDataCubit>()
+                                  .getClientData(clientId);
                               Navigator.pushNamed(
                                 context,
                                 '/ChatScreen',
                                 arguments: {
                                   'clientId': clientId,
-                                  'client': clientData,
+                                  'clientData': clientData,
                                 },
                               );
                             },

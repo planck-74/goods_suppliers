@@ -1,0 +1,2 @@
+C:/development/goods/goods_suppliers/android/app/.cxx/RelWithDebInfo/3b632y36/x86_64/CMakeFiles/edit_cache.dir
+C:/development/goods/goods_suppliers/android/app/.cxx/RelWithDebInfo/3b632y36/x86_64/CMakeFiles/rebuild_cache.dir

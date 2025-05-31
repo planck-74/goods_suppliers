@@ -8,7 +8,6 @@ class GetClientDataCubit extends Cubit<GetClientDataState> {
 
   Future<void> getClientData(String clientId) async {
     try {
-      // Emit loading state
       emit(GetClientDataLoading());
 
       DocumentSnapshot<Map<String, dynamic>> documentSnapshot =
