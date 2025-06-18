@@ -32,7 +32,7 @@ class _EnhancedChatTextfieldState extends State<EnhancedChatTextfield>
   final ImagePicker _picker = ImagePicker();
   final FocusNode _focusNode = FocusNode();
   // حالة الملفات والوسائط
-  List<AttachmentFile> _attachments = [];
+  final List<AttachmentFile> _attachments = [];
   bool _isSending = false;
 
   // الرسوم المتحركة
@@ -243,6 +243,7 @@ class _EnhancedChatTextfieldState extends State<EnhancedChatTextfield>
       FieldValue timestamp) async {
     final messageData = {
       'sender': senderId,
+      'recipientId': widget.chatId, // إضافة معرف المستلم
       'text': _messageController.text.trim(),
       'timestamp': timestamp,
       'type': 'text',
@@ -262,6 +263,7 @@ class _EnhancedChatTextfieldState extends State<EnhancedChatTextfield>
     // إنشاء رسالة مؤقتة للمرفق
     final tempMessageRef = await chatDocRef.collection('messages').add({
       'sender': senderId,
+      'recipientId': widget.chatId, // إضافة معرف المستلم
       'fileName': attachment.name,
       'fileSize': attachment.size,
       'timestamp': timestamp,

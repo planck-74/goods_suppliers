@@ -7,6 +7,7 @@ enum MessageStatus { sending, sent, delivered, read, failed }
 class ChatMessage {
   final String id;
   final String senderId;
+  final String recipientId; // إضافة معرف المستلم
   final String? text;
   final String? fileUrl;
   final String? fileName;
@@ -19,6 +20,7 @@ class ChatMessage {
   ChatMessage({
     required this.id,
     required this.senderId,
+    required this.recipientId, // إضافة للكونستركتور
     this.text,
     this.fileUrl,
     this.fileName,
@@ -34,6 +36,8 @@ class ChatMessage {
     return ChatMessage(
       id: doc.id,
       senderId: data['sender'] ?? '',
+      recipientId:
+          data['recipientId'] ?? '', // استخراج معرف المستلم من Firestore
       text: data['text'],
       fileUrl: data['file'],
       fileName: data['fileName'],

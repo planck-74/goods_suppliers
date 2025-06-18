@@ -29,9 +29,7 @@ ThemeData getThemeData() {
       color: Colors.red,
     ),
     bottomSheetTheme: const BottomSheetThemeData(backgroundColor: whiteColor),
-    dialogTheme: const DialogTheme(backgroundColor: whiteColor),
-    indicatorColor: darkBlueColor,
-    dialogBackgroundColor: darkBlueColor,
+    dialogTheme: const DialogThemeData(backgroundColor: whiteColor),
     scaffoldBackgroundColor: scaffoldBackgroundColor,
     textSelectionTheme: const TextSelectionThemeData(
       cursorColor: darkBlueColor,
@@ -71,6 +69,7 @@ ThemeData getThemeData() {
       bodyMedium: _textStyle(color: darkBlueColor, fontSize: 18),
       bodySmall: _textStyle(color: darkBlueColor, fontSize: 12),
     ),
+    tabBarTheme: TabBarThemeData(indicatorColor: darkBlueColor),
   );
 }
 

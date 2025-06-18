@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -246,13 +245,15 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen>
   }
 
   Widget _buildChatContent() {
+    final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+    String clientId = arguments['clientId'];
     return Column(
       children: [
         if (_isSearchMode) _buildSearchBar(),
         if (_replyToMessage != null) _buildReplyPreview(),
         Expanded(child: _buildMessagesList()),
         EnhancedChatTextfield(
-          chatId: FirebaseAuth.instance.currentUser?.uid ?? '',
+          chatId: clientId,
           replyToMessage: _replyToMessage,
           onClearReply: _clearReply,
         ),
@@ -342,10 +343,13 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen>
   }
 
   Widget _buildMessagesList() {
+    final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+    String clientId = arguments['clientId'];
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('chats')
-          .doc(FirebaseAuth.instance.currentUser?.uid)
+          .doc(clientId)
           .collection('messages')
           .orderBy('timestamp', descending: true)
           .limit(_limit)
@@ -367,6 +371,16 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen>
                   .contains(_searchQuery.toLowerCase()) ??
               false;
         }).toList();
+
+        // Mark messages as read if not sent by current user and not already read
+        Future.microtask(() async {
+          for (final doc in snapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            if (data['sender'] != currentUserId && data['status'] != 'read') {
+              await doc.reference.update({'status': 'read'});
+            }
+          }
+        });
 
         return FadeTransition(
           opacity: _fadeAnimation,

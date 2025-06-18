@@ -44,7 +44,7 @@ class _RecentItemsCardState extends State<RecentItemsCard> {
   void initState() {
     super.initState();
     product.addAll(widget.product);
-    product.addAll(widget.product!);
+    product.addAll(widget.product);
   }
 
   /// Calculates the total price for this product based on:
