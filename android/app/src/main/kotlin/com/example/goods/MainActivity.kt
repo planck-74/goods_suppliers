@@ -1,4 +1,4 @@
-package com.example.goods
+package com.planck.goodssuppliers
 
 import io.flutter.embedding.android.FlutterActivity
 

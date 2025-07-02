@@ -33,11 +33,10 @@ class _AvailableCardState extends State<AvailableCard> {
   void initState() {
     super.initState();
     if (widget.product != null) {
-      product.addAll(widget.product!); // Add dynamic data
+      product.addAll(widget.product!);
     }
   }
 
-  /// يعرض صورة المنتج مع التعامل مع حالات التحميل والأخطاء
   Widget _buildProductImage() {
     if (widget.product != null && widget.product!.containsKey('imageUrl')) {
       return SizedBox(

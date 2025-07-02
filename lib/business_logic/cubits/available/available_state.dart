@@ -10,6 +10,11 @@ class AvailableLoaded extends AvailableState {
 
 class AvailableLoading extends AvailableState {}
 
+class AvailableLoadingMore extends AvailableState {
+  final List<dynamic> products;
+  AvailableLoadingMore(this.products);
+}
+
 class AvailableError extends AvailableState {
   final String message;
 

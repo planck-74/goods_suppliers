@@ -10,6 +10,12 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
   List<Map<String, dynamic>> filteredProducts = [];
   List<QueryDocumentSnapshot> UnAvailableProducts = [];
 
+  static const int pageSize = 20;
+  DocumentSnapshot? lastDocument;
+  bool hasMore = true;
+  bool isLoadingMore = false;
+  List<Map<String, dynamic>> pagedProducts = [];
+
   void filterProducts(String filterType, String value) async {
     filteredProducts.clear();
     emit(UnavailableLoading());
@@ -24,11 +30,60 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
     emit(UnavailableLoaded(List.from(filteredProducts)));
   }
 
-  // unavailable products
+  Future<void> fetchInitialUnAvailableProducts(String storeId) async {
+    UnAvailableProducts = [];
+    pagedProducts = [];
+    lastDocument = null;
+    hasMore = true;
+    emit(UnavailableLoading());
+    await _fetchUnAvailableProductsPage(storeId);
+  }
+
+  Future<void> fetchNextUnAvailableProductsPage(String storeId) async {
+    if (!hasMore || isLoadingMore) return;
+    isLoadingMore = true;
+    emit(UnavailableLoadingMore(List.from(pagedProducts)));
+    await _fetchUnAvailableProductsPage(storeId);
+    isLoadingMore = false;
+  }
+
+  Future<void> _fetchUnAvailableProductsPage(String storeId) async {
+    if (storeId.isEmpty) {
+      emit(UnavailableError('Store ID is empty'));
+      return;
+    }
+    CollectionReference productsRef = FirebaseFirestore.instance
+        .collection('stores')
+        .doc(storeId)
+        .collection('products');
+    Query query =
+        productsRef.where('availability', isEqualTo: false).limit(pageSize);
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument!);
+    }
+    QuerySnapshot querySnapshot = await query.get();
+    if (querySnapshot.docs.isNotEmpty) {
+      lastDocument = querySnapshot.docs.last;
+      UnAvailableProducts.addAll(querySnapshot.docs);
+      pagedProducts.addAll(
+          querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>));
+      emit(UnavailableLoaded(List.from(pagedProducts)));
+      if (querySnapshot.docs.length < pageSize) {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+      emit(UnavailableLoaded(List.from(pagedProducts)));
+    }
+  }
+
+  // Deprecated: use fetchInitialUnAvailableProducts/fetchNextUnAvailableProductsPage for lazy loading
+  @Deprecated(
+      'Use fetchInitialUnAvailableProducts/fetchNextUnAvailableProductsPage for lazy loading')
   Future<List<QueryDocumentSnapshot<Object?>>?> UnAvailable(
       String storeId) async {
     UnAvailableProducts = [];
-
+    emit(UnavailableLoading());
     if (storeId.isNotEmpty) {
       CollectionReference productsRef = FirebaseFirestore.instance
           .collection('stores')

@@ -10,6 +10,11 @@ class UnavailableLoaded extends UnAvailableState {
 
 class UnavailableLoading extends UnAvailableState {}
 
+class UnavailableLoadingMore extends UnAvailableState {
+  final List<dynamic> products;
+  UnavailableLoadingMore(this.products);
+}
+
 class UnavailableError extends UnAvailableState {
   final String message;
 

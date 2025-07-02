@@ -44,11 +44,8 @@ Future<String?> getStoreId() async {
 
       if (data.containsKey('storeId')) {
         final String fetchedStoreId = data['storeId'];
-        print('✅ storeId fetched: $fetchedStoreId');
         return fetchedStoreId;
-      } else {
-        print('❌ "storeId" not found in supplier document');
-      }
+      } else {}
     } else {
       print('❌ Supplier document does not exist for current user');
     }

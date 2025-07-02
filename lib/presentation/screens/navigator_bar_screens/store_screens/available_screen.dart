@@ -20,7 +20,7 @@ class _AvailableState extends State<Available> {
   @override
   void initState() {
     super.initState();
-    context.read<AvailableCubit>().available(storeId);
+    context.read<AvailableCubit>().fetchInitialAvailableProducts(storeId);
   }
 
   @override
@@ -91,8 +91,12 @@ class _AvailableState extends State<Available> {
                       ),
                       const SizedBox(width: 6),
                       customOutlinedButton(
-                        onPressed: () =>
-                            context.read<AvailableCubit>().available(storeId),
+                        onPressed: () {
+                          print('cancel');
+                          context
+                              .read<AvailableCubit>()
+                              .fetchInitialAvailableProducts(storeId);
+                        },
                         width: 57,
                         height: 25,
                         context: context,
@@ -121,7 +125,9 @@ class _AvailableState extends State<Available> {
             child: RefreshIndicator(
               color: primaryColor,
               onRefresh: () async {
-                await context.read<AvailableCubit>().available(storeId);
+                await context
+                    .read<AvailableCubit>()
+                    .fetchInitialAvailableProducts(storeId);
               },
               child: BlocBuilder<AvailableCubit, AvailableState>(
                 builder: (context, state) {
@@ -129,8 +135,12 @@ class _AvailableState extends State<Available> {
                     return Center(
                         child: customCircularProgressIndicator(
                             context: context, height: 50, width: 50));
-                  } else if (state is AvailableLoaded) {
-                    final availableProducts = state.AvailableProducts;
+                  } else if (state is AvailableLoaded ||
+                      state is AvailableLoadingMore) {
+                    final availableProducts = state is AvailableLoaded
+                        ? state.AvailableProducts
+                        : (state as AvailableLoadingMore).products;
+                    final isLoadingMore = state is AvailableLoadingMore;
                     return availableProducts.isEmpty
                         ? const Center(
                             child: Text(
@@ -138,7 +148,9 @@ class _AvailableState extends State<Available> {
                             style: TextStyle(color: Colors.black),
                           ))
                         : AvailableProductsList(
-                            data: availableProducts, storeId: storeId);
+                            data: availableProducts,
+                            storeId: storeId,
+                            isLoadingMore: isLoadingMore);
                   }
                   return const Center(
                       child: Text(

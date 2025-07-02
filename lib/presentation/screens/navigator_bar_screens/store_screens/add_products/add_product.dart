@@ -62,11 +62,21 @@ class _AddProductState extends State<AddProduct> {
                         child: customCircularProgressIndicator(
                             context: context, height: 50, width: 50),
                       );
-                    } else if (state is SearchProductsLoaded) {
-                      final searchResults = state.products;
+                    } else if (state is SearchProductsLoaded ||
+                        state is SearchProductsLoadingMore) {
+                      final searchResults = state is SearchProductsLoaded
+                          ? state.products
+                          : (state as SearchProductsLoadingMore).products;
+                      final isLoadingMore = state is SearchProductsLoadingMore;
                       return searchResults.isEmpty
                           ? _buildEmptyState()
-                          : buildList(searchResults);
+                          : AddListViewProducts(
+                              data: searchResults,
+                              isLoadingMore: isLoadingMore,
+                              onLoadMore: () => context
+                                  .read<SearchProductsCubit>()
+                                  .fetchNextAvailableProductsNotInStorePage(),
+                            );
                     } else if (state is SearchProductsInitial) {
                       List products = state.products;
                       return buildList(products);

@@ -11,6 +11,11 @@ final class SearchProductsInitial extends SearchProductsState {
 
 final class SearchProductsLoading extends SearchProductsState {}
 
+final class SearchProductsLoadingMore extends SearchProductsState {
+  final List<Map<String, dynamic>> products;
+  SearchProductsLoadingMore(this.products);
+}
+
 final class SearchProductsLoaded extends SearchProductsState {
   final List<Map<String, dynamic>> products;
 

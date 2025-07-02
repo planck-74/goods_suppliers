@@ -19,7 +19,7 @@ class _UnAvailableState extends State<UnAvailable> {
   @override
   void initState() {
     super.initState();
-    context.read<UnAvailableCubit>().UnAvailable(storeId);
+    context.read<UnAvailableCubit>().fetchInitialUnAvailableProducts(storeId);
   }
 
   @override
@@ -81,7 +81,7 @@ class _UnAvailableState extends State<UnAvailable> {
                       customOutlinedButton(
                         onPressed: () => context
                             .read<UnAvailableCubit>()
-                            .UnAvailable(storeId),
+                            .fetchInitialUnAvailableProducts(storeId),
                         width: 57,
                         height: 25,
                         context: context,
@@ -114,7 +114,9 @@ class _UnAvailableState extends State<UnAvailable> {
             child: RefreshIndicator(
               color: primaryColor,
               onRefresh: () async {
-                await context.read<UnAvailableCubit>().UnAvailable(storeId);
+                await context
+                    .read<UnAvailableCubit>()
+                    .fetchInitialUnAvailableProducts(storeId);
               },
               child: BlocBuilder<UnAvailableCubit, UnAvailableState>(
                 builder: (context, state) {
@@ -122,15 +124,21 @@ class _UnAvailableState extends State<UnAvailable> {
                     return Center(
                         child: customCircularProgressIndicator(
                             context: context, height: 50, width: 50));
-                  } else if (state is UnavailableLoaded) {
-                    final unAvailableProducts = state.unAvailableProducts;
+                  } else if (state is UnavailableLoaded ||
+                      state is UnavailableLoadingMore) {
+                    final unAvailableProducts = state is UnavailableLoaded
+                        ? state.unAvailableProducts
+                        : (state as UnavailableLoadingMore).products;
+                    final isLoadingMore = state is UnavailableLoadingMore;
                     return unAvailableProducts.isEmpty
                         ? const Center(
                             child: Text(
                             'لا توجد منتجات لعرضها',
                             style: TextStyle(color: Colors.black),
                           ))
-                        : ListViewUnavailable(data: unAvailableProducts);
+                        : ListViewUnavailable(
+                            data: unAvailableProducts,
+                            isLoadingMore: isLoadingMore);
                   }
                   return const Center(
                       child: Text(

@@ -69,7 +69,7 @@ ThemeData getThemeData() {
       bodyMedium: _textStyle(color: darkBlueColor, fontSize: 18),
       bodySmall: _textStyle(color: darkBlueColor, fontSize: 12),
     ),
-    tabBarTheme: TabBarThemeData(indicatorColor: darkBlueColor),
+    tabBarTheme: const TabBarThemeData(indicatorColor: darkBlueColor),
   );
 }
 

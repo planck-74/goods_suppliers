@@ -19,7 +19,7 @@ class _OfferState extends State<Offer> {
   @override
   void initState() {
     super.initState();
-    context.read<OfferCubit>().fetchOnSaleProducts(storeId);
+    context.read<OfferCubit>().fetchInitialOnSaleProducts();
   }
 
   @override
@@ -80,7 +80,7 @@ class _OfferState extends State<Offer> {
                       customOutlinedButton(
                         onPressed: () => context
                             .read<OfferCubit>()
-                            .fetchOnSaleProducts(storeId),
+                            .fetchInitialOnSaleProducts(),
                         width: 57,
                         height: 25,
                         context: context,
@@ -113,7 +113,7 @@ class _OfferState extends State<Offer> {
             child: RefreshIndicator(
               color: primaryColor,
               onRefresh: () async {
-                await context.read<OfferCubit>().fetchOnSaleProducts(storeId);
+                await context.read<OfferCubit>().fetchInitialOnSaleProducts();
               },
               child: BlocBuilder<OfferCubit, OfferState>(
                 builder: (context, state) {
@@ -123,6 +123,8 @@ class _OfferState extends State<Offer> {
                             context: context, height: 50, width: 50));
                   } else if (state is OfferLoaded) {
                     final offerProducts = state.offerProducts;
+                    final isLoadingMore =
+                        context.read<OfferCubit>().isLoadingMore;
                     return offerProducts.isEmpty
                         ? const Center(
                             child: Text(
@@ -131,7 +133,9 @@ class _OfferState extends State<Offer> {
                             ),
                           )
                         : offerProductsList(
-                            data: offerProducts, storeId: storeId ?? '');
+                            data: offerProducts,
+                            storeId: storeId,
+                            isLoadingMore: isLoadingMore);
                   } else if (state is OfferError) {
                     return Center(
                       child: Text(

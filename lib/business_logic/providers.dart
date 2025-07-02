@@ -7,6 +7,7 @@ import 'package:goods/business_logic/cubits/get_supplier_data/get_supplier_data_
 import 'package:goods/business_logic/cubits/image_picker/image_picker_cubit.dart';
 import 'package:goods/business_logic/cubits/offer_cubit/offer_cubit.dart';
 import 'package:goods/business_logic/cubits/orders/orders_cubit.dart';
+import 'package:goods/business_logic/cubits/search_main_store_cubit/search_main_store_cubit.dart';
 import 'package:goods/business_logic/cubits/search_products/search_products_cubit.dart';
 import 'package:goods/business_logic/cubits/sign/sign_cubit.dart';
 import 'package:goods/business_logic/cubits/supplier_data/controller_cubit.dart';
@@ -48,5 +49,8 @@ List<BlocProvider> providers = [
   ),
   BlocProvider<AddProductCubit>(
     create: (context) => AddProductCubit(),
+  ),
+  BlocProvider<SearchMainStoreCubit>(
+    create: (context) => SearchMainStoreCubit(),
   ),
 ];

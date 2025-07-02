@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:goods/data/global/theme/theme_data.dart';
 
 Widget customCircularProgressIndicator({
   required context,
@@ -13,7 +14,7 @@ Widget customCircularProgressIndicator({
     child: Center(
       child: CircularProgressIndicator(
         value: value,
-        color: color ?? Theme.of(context).dialogBackgroundColor,
+        color: darkBlueColor,
       ),
     ),
   );

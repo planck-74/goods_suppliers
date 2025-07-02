@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:goods/business_logic/cubits/offer_cubit/offer_state.dart';
+import 'package:goods/data/global/theme/theme_data.dart';
 
 class OfferCubit extends Cubit<OfferState> {
   OfferCubit() : super(OfferInitial()) {
@@ -16,6 +17,12 @@ class OfferCubit extends Cubit<OfferState> {
   List<Map<String, dynamic>> combinedProducts = [];
   List<Map<String, dynamic>> filteredProducts = [];
   List<QueryDocumentSnapshot> onSaleProducts = [];
+  static const int pageSize = 20;
+  DocumentSnapshot? lastDocument;
+  bool hasMore = true;
+  bool isLoadingMore = false;
+  List<Map<String, dynamic>> pagedProducts = [];
+
   void filterProducts(String filterType, String value) async {
     filteredProducts.clear();
     emit(OfferLoading());
@@ -77,7 +84,6 @@ class OfferCubit extends Cubit<OfferState> {
           }
         }
 
-        print('✅ البيانات تم تحميلها بنجاح!');
         print(manufacturer);
         emit(OfferLoaded(productData ?? [])); // تحديث الحالة بعد تحميل البيانات
       } else {
@@ -88,28 +94,50 @@ class OfferCubit extends Cubit<OfferState> {
     }
   }
 
-  Future<List<QueryDocumentSnapshot<Object?>>?> fetchOnSaleProducts(
-      String storeId) async {
+  Future<void> fetchInitialOnSaleProducts() async {
     onSaleProducts = [];
+    pagedProducts = [];
+    lastDocument = null;
+    hasMore = true;
+    emit(OfferLoading());
+    await _fetchOnSaleProductsPage();
+  }
 
-    if (storeId.isNotEmpty) {
-      CollectionReference productsRef = FirebaseFirestore.instance
-          .collection('stores')
-          .doc(storeId)
-          .collection('products');
+  Future<void> fetchNextOnSaleProductsPage() async {
+    if (!hasMore || isLoadingMore) return;
+    isLoadingMore = true;
+    await _fetchOnSaleProductsPage();
+    isLoadingMore = false;
+  }
 
-      // Modify the query to filter by 'isOnSale'
-      QuerySnapshot querySnapshot =
-          await productsRef.where('isOnSale', isEqualTo: true).get();
-
-      onSaleProducts = querySnapshot.docs;
-      emit(OfferLoaded(onSaleProducts
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList()));
-      return onSaleProducts;
+  Future<void> _fetchOnSaleProductsPage() async {
+    if (storeId.isEmpty) {
+      emit(OfferError('Store ID is empty'));
+      return;
     }
-
-    return null;
+    CollectionReference productsRef = FirebaseFirestore.instance
+        .collection('stores')
+        .doc(storeId)
+        .collection('products');
+    Query query =
+        productsRef.where('isOnSale', isEqualTo: true).limit(pageSize);
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument!);
+    }
+    QuerySnapshot querySnapshot = await query.get();
+    if (querySnapshot.docs.isNotEmpty) {
+      lastDocument = querySnapshot.docs.last;
+      onSaleProducts.addAll(querySnapshot.docs);
+      pagedProducts.addAll(
+          querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>));
+      emit(OfferLoaded(List.from(pagedProducts)));
+      if (querySnapshot.docs.length < pageSize) {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+      emit(OfferLoaded(List.from(pagedProducts)));
+    }
   }
 
   void eliminateProduct({required int index}) {
