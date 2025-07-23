@@ -10,6 +10,7 @@ const Color scaffoldBackgroundColor = Color.fromARGB(255, 232, 232, 232);
 const Color lightBackgroundColor = whiteColor;
 String supplierId = FirebaseAuth.instance.currentUser!.uid;
 String storeId = 'cafb6e90-0ab1-11f0-b25a-8b76462b3bd5';
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> initStoreId() async {
   String? fetched = await getStoreId();

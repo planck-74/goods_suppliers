@@ -7,11 +7,13 @@ import 'package:goods/business_logic/routes.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/splash_screen.dart';
 import 'package:goods/services/auth_service.dart';
+import 'package:goods/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-
+  final notificationService = NotificationService(navigatorKey: navigatorKey);
+  await notificationService.init();
   await initStoreId();
   runApp(GoodsSuppliers());
 }
@@ -25,6 +27,7 @@ class GoodsSuppliers extends StatelessWidget {
     return MultiBlocProvider(
       providers: providers,
       child: MaterialApp(
+        navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         routes: routes,
         supportedLocales: const [

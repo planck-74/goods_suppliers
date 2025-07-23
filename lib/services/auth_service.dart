@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/business_logic/cubits/get_supplier_data/get_supplier_data_cubit.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/custom_widgets/snack_bar_errors.dart';
+import 'package:goods/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
@@ -39,6 +40,10 @@ class AuthService {
 
   static Future<void> logout(BuildContext context) async {
     try {
+      final notificationService =
+          NotificationService(navigatorKey: navigatorKey);
+      await notificationService.removeCurrentToken();
+
       await auth.signOut().then((value) {
         showSnackBar(context, 'تم تسجيل الخروج.', darkBlueColor);
         saveLoginState(false);
