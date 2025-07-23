@@ -9,12 +9,6 @@ import 'package:intl/intl.dart';
 class Contact extends StatelessWidget {
   const Contact({super.key});
 
-  /// Builds a list of chat summaries by reading each doc in `chats`.
-  /// For each chat doc, we directly use the top-level fields:
-  /// - `lastMessage`
-  /// - `lastMessageTime`
-  /// - `clientId` (doc.id)
-  /// Then fetch the client's info from `clients/{clientId}`.
   Future<List<Map<String, dynamic>>> _buildChatList(
     List<QueryDocumentSnapshot> chatDocs,
   ) async {
@@ -34,6 +28,9 @@ class Contact extends StatelessWidget {
       final Timestamp? timestamp = docData['lastMessageTime'] as Timestamp?;
       if (timestamp == null) continue;
 
+      // Extract unreadCount
+      final int unreadCount = docData['unreadCount'] ?? 0;
+
       // Fetch client info
       final clientSnapshot = await FirebaseFirestore.instance
           .collection('clients')
@@ -48,6 +45,7 @@ class Contact extends StatelessWidget {
         'clientData': clientData,
         'lastMessage': lastMessage,
         'timestamp': timestamp,
+        'unreadCount': unreadCount,
       });
     }
 
@@ -133,7 +131,37 @@ class Contact extends StatelessWidget {
                               lastMessage,
                               style: const TextStyle(color: darkBlueColor),
                             ),
-                            trailing: Text(formattedTime),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(formattedTime),
+                                const SizedBox(width: 8),
+                                // Red dot with unread count
+                                if (chat['unreadCount'] != null &&
+                                    chat['unreadCount'] > 0)
+                                  Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 20,
+                                      minHeight: 20,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        chat['unreadCount'].toString(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                             onTap: () {
                               context
                                   .read<GetClientDataCubit>()

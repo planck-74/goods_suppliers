@@ -247,6 +247,13 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen>
   Widget _buildChatContent() {
     final arguments = ModalRoute.of(context)!.settings.arguments as Map;
     String clientId = arguments['clientId'];
+    // Mark all messages as read (reset unreadCount) when opening the chat
+    Future.microtask(() async {
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(clientId)
+          .set({'unreadCount': 0}, SetOptions(merge: true));
+    });
     return Column(
       children: [
         if (_isSearchMode) _buildSearchBar(),

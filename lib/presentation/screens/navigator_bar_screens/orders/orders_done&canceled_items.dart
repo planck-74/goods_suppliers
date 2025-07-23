@@ -92,6 +92,7 @@ class UpperContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(selectedProducts);
     return Container(
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -111,8 +112,8 @@ class UpperContainer extends StatelessWidget {
                   const SizedBox(
                     height: 10,
                   ),
-                  const Text(
-                    'ملاحظات:  لا توجد ملاحظات',
+                  Text(
+                    'ملاحظات:  ${order.note.isNotEmpty || order.note != '' ? order.note : 'لا توجد ملاحظات'}',
                     style: TextStyle(fontSize: 14),
                   ),
                   const SizedBox(
@@ -124,14 +125,10 @@ class UpperContainer extends StatelessWidget {
                         color: Colors.grey.withOpacity(0.25),
                         borderRadius:
                             const BorderRadius.all(Radius.circular(6))),
-                    child: BlocBuilder<OrdersCubit, OrdersState>(
-                      builder: (context, state) {
-                        return Text(
-                          'الإجمالي :  ${calculateTotalWithOffer(selectedProducts)}',
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        );
-                      },
+                    child: Text(
+                      'الإجمالي :  ${calculateTotal(selectedProducts)} جـ',
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],

@@ -15,7 +15,6 @@ Future<void> initStoreId() async {
   String? fetched = await getStoreId();
   if (fetched != null) {
     storeId = fetched;
-    print("✅ storeId initialized: $storeId");
   } else {
     storeId = ''; // fallback value
     print("❌ Failed to initialize storeId");

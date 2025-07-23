@@ -10,6 +10,7 @@ class OrderModel {
   final int totalWithOffer;
   final List products;
   final Timestamp? doneAt;
+  final String note; // Added note field
   ClientModel? client;
 
   OrderModel({
@@ -21,6 +22,7 @@ class OrderModel {
     required this.date,
     required this.products,
     this.doneAt,
+    this.note = '', // Default value for note
     this.client,
   });
 
@@ -34,6 +36,7 @@ class OrderModel {
       date: map['date'] is Timestamp ? map['date'] : Timestamp.now(),
       products: map['products'] is List ? map['products'] : [],
       doneAt: map['doneAt'] is Timestamp ? map['doneAt'] : null,
+      note: map['note'] ?? '', // Map note field
     );
   }
 
@@ -52,6 +55,7 @@ class OrderModel {
       'date': date,
       'products': products,
       'doneAt': doneAt,
+      'note': note, // Add note to map
     };
   }
 }
