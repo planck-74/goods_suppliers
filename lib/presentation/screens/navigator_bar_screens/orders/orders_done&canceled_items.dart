@@ -114,7 +114,7 @@ class UpperContainer extends StatelessWidget {
                   ),
                   Text(
                     'ملاحظات:  ${order.note.isNotEmpty || order.note != '' ? order.note : 'لا توجد ملاحظات'}',
-                    style: TextStyle(fontSize: 14),
+                    style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(
                     height: 18,

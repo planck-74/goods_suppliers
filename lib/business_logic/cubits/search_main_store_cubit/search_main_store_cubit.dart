@@ -27,7 +27,7 @@ class SearchMainStoreCubit extends Cubit<SearchMainStoreState> {
 
       // For prefix search (case-sensitive, works for English letters)
       if (query.isNotEmpty) {
-        String endQuery = query + '\uf8ff';
+        String endQuery = '$query\uf8ff';
         collection = collection
             .where('name', isGreaterThanOrEqualTo: query)
             .where('name', isLessThan: endQuery);

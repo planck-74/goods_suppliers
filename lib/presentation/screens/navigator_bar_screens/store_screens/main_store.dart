@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:goods/business_logic/cubits/search_main_store_cubit/search_main_store_cubit.dart';
-import 'package:goods/business_logic/cubits/search_products/search_products_cubit.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/cards/card_available.dart';
 import 'package:goods/presentation/cards/card_offer.dart';
@@ -10,12 +9,6 @@ import 'package:goods/presentation/screens/navigator_bar_screens/store_screens/a
 import 'package:goods/presentation/screens/navigator_bar_screens/store_screens/offer_screen.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/store_screens/unavailable_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:goods/business_logic/cubits/offer_cubit/offer_cubit.dart';
-import 'package:goods/business_logic/cubits/offer_cubit/offer_state.dart';
-import 'package:goods/business_logic/cubits/available/available_cubit.dart';
-import 'package:goods/business_logic/cubits/available/available_state.dart';
-import 'package:goods/business_logic/cubits/unavailable/unavailable_cubit.dart';
-import 'package:goods/business_logic/cubits/unavailable/unavailable_state.dart';
 
 class Store extends StatefulWidget {
   const Store({super.key});
@@ -174,7 +167,6 @@ class StoreSearchSheetState extends State<StoreSearchSheet> {
                   setState(() {
                     _searchQuery = value;
                   });
-                  print('_currentTabIndex: $_currentTabIndex');
                   context.read<SearchMainStoreCubit>().searchProductsByName(
                         _searchQuery,
                         _currentTabIndex,

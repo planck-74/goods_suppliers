@@ -55,11 +55,7 @@ class _RecentItemsState extends State<PreparingItemsScreen> {
     final ClientModel client = data['client'];
     final OrderModel order = data['order'];
     final List<int> initControllers = data['initControllers'];
-    int countTrueValues(List<bool> list) {
-      // Filter the list for true values and get the length of the filtered list
-      return list.where((item) => item == true).length;
-    }
-
+   
     return Scaffold(
       backgroundColor: whiteColor,
       appBar: customAppBar(

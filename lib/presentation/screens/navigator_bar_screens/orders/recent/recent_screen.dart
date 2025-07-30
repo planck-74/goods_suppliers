@@ -19,12 +19,7 @@ class _RecentState extends State<Recent> {
   /// When true: orders are sorted from recent (newest) to past (oldest)
   /// When false: orders are sorted from oldest to newest.
   bool isRecentFirst = true;
-
-  @override
-  void initState() {
-    super.initState();
-    context.read<OrdersCubit>().fetchOrders();
-  }
+ 
 
   Future<void> _refreshOrders() async {
     await context.read<OrdersCubit>().fetchOrders();
