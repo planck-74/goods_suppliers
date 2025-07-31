@@ -18,16 +18,15 @@ class Orders extends StatefulWidget {
 
 class _ordersState extends State<Orders> {
   @override
-@override
-void initState() {
-  super.initState();
-  _loadOrders(); 
-}
+  @override
+  void initState() {
+    super.initState();
+    _loadOrders();
+  }
 
-void _loadOrders() async {
-  await context.read<OrdersCubit>().fetchOrders();
-}
-
+  void _loadOrders() async {
+    await context.read<OrdersCubit>().fetchOrders();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,105 +85,15 @@ void _loadOrders() async {
                           ],
                         ),
                       ),
-                                Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('جارٍ التحضير'),
-                            SizedBox(width: 6),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: BlocBuilder<OrdersCubit, OrdersState>(
-                                builder: (context, state) {
-                                  if (state is OrdersLoaded) {
-                                    return Text(
-                                      '${context.read<OrdersCubit>().ordersPreparing.length}',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    );
-                                  }
-                                  return SizedBox();
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
+                      Tab(
+                        child: Text('جارٍ التحضير'),
                       ),
-                     Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('تم التوصيل'),
-                            SizedBox(width: 6),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: BlocBuilder<OrdersCubit, OrdersState>(
-                                builder: (context, state) {
-                                  if (state is OrdersLoaded) {
-                                    return Text(
-                                      '${context.read<OrdersCubit>().ordersDone.length}',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    );
-                                  }
-                                  return SizedBox();
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
+                      Tab(
+                        child: Text('تم التوصيل'),
                       ),
-                     Tab(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('ملغي'),
-                            SizedBox(width: 6),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: BlocBuilder<OrdersCubit, OrdersState>(
-                                builder: (context, state) {
-                                  if (state is OrdersLoaded) {
-                                    return Text(
-                                      '${context.read<OrdersCubit>().ordersCanceled.length}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    );
-                                  }
-                                  return SizedBox();
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
+                      Tab(
+                        child: Text('ملغي'),
                       ),
-
-                    
-                   
                     ]),
               ),
               const Flexible(

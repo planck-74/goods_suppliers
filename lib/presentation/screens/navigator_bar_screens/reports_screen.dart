@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:goods/business_logic/cubits/orders/orders_cubit.dart';
-import 'package:goods/business_logic/cubits/orders/orders_state.dart';
+import 'package:goods/business_logic/cubits/reports/reports_cubit.dart';
+import 'package:goods/business_logic/cubits/reports/reports_state.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
-import 'package:goods/presentation/custom_widgets/custom_app_bar%20copy.dart';
+import 'package:goods/presentation/custom_widgets/custom_app_bar copy.dart';
 import 'package:goods/presentation/custom_widgets/date_picker.dart';
 
 class Reports extends StatefulWidget {
@@ -18,19 +18,18 @@ class _ReportsState extends State<Reports> with TickerProviderStateMixin {
   DateTime? startDate;
   DateTime? endDate;
   late TabController _tabController;
-  final PageController _pageController = PageController();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    // context.read<OrdersCubit>().fetchOrders();
+    // Load all orders initially
+    context.read<ReportsCubit>().fetchAllOrders();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _pageController.dispose();
     super.dispose();
   }
 
@@ -41,573 +40,623 @@ class _ReportsState extends State<Reports> with TickerProviderStateMixin {
     required Color color,
     required IconData icon,
     String? trend,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.all(8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
-              const Spacer(),
-              if (trend != null)
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    color: color.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    trend,
-                    style: const TextStyle(
-                      color: Colors.green,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const Spacer(),
+                if (trend != null)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: trend.startsWith('+')
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: darkBlueColor,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOverviewTab(OrdersState state) {
-    if (state is! OrdersLoaded) return const SizedBox();
-
-    final orders = state.orders;
-    final ordersDone = state.ordersDone;
-    final ordersCanceled = state.ordersCanceled;
-    final ordersPreparing = state.ordersPreparing;
-    final ordersRecent = state.ordersRecent;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Key Performance Indicators
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            childAspectRatio: 1.1,
-            children: [
-              _buildKPICard(
-                title: 'إجمالي الطلبات',
-                value: '${orders.length}',
-                subtitle: 'جميع الفترات المختارة',
-                color: Colors.blue,
-                icon: Icons.receipt_long,
-                trend: '+12%',
-              ),
-              _buildKPICard(
-                title: 'الطلبات المكتملة',
-                value: '${ordersDone.length}',
-                subtitle: 'تم التوصيل بنجاح',
-                color: Colors.green,
-                icon: Icons.check_circle,
-                trend: '+8%',
-              ),
-              _buildKPICard(
-                title: 'قيد التحضير',
-                value: '${ordersPreparing.length}',
-                subtitle: 'جاري العمل عليها',
-                color: Colors.orange,
-                icon: Icons.hourglass_top,
-              ),
-              _buildKPICard(
-                title: 'في انتظار التأكيد',
-                value: '${ordersRecent.length}',
-                subtitle: 'تحتاج مراجعة',
-                color: Colors.purple,
-                icon: Icons.pending_actions,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Orders Status Chart
-          Container(
-            constraints: const BoxConstraints(
-              maxHeight: 400,
-            ),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                const Text(
-                  'توزيع حالات الطلبات',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: darkBlueColor,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 4,
-                      centerSpaceRadius: 50,
-                      sections: [
-                        PieChartSectionData(
-                          color: Colors.green,
-                          value: ordersDone.length.toDouble(),
-                          title: '${ordersDone.length}',
-                          radius: 80,
-                          titleStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        PieChartSectionData(
-                          color: Colors.orange,
-                          value: ordersPreparing.length.toDouble(),
-                          title: '${ordersPreparing.length}',
-                          radius: 80,
-                          titleStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        PieChartSectionData(
-                          color: Colors.purple,
-                          value: ordersRecent.length.toDouble(),
-                          title: '${ordersRecent.length}',
-                          radius: 80,
-                          titleStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        PieChartSectionData(
-                          color: Colors.red,
-                          value: ordersCanceled.length.toDouble(),
-                          title: '${ordersCanceled.length}',
-                          radius: 80,
-                          titleStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  children: [
-                    _buildLegendItem('مكتملة', Colors.green),
-                    _buildLegendItem('قيد التحضير', Colors.orange),
-                    _buildLegendItem('في الانتظار', Colors.purple),
-                    _buildLegendItem('ملغية', Colors.red),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFinancialTab(OrdersState state) {
-    if (state is! OrdersLoaded) return const SizedBox();
-
-    final ordersDoneTotal = state.ordersDoneTotal;
-    final ordersCanceledTotal = state.ordersCanceledTotal;
-    final ordersDone = state.ordersDone;
-    final avgInvoiceValue =
-        ordersDone.isNotEmpty ? ordersDoneTotal / ordersDone.length : 0.0;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Financial KPIs
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            childAspectRatio: 1.1,
-            children: [
-              _buildKPICard(
-                title: 'إجمالي المبيعات',
-                value: '${ordersDoneTotal.toStringAsFixed(0)} جـ',
-                subtitle: 'المبيعات المحققة',
-                color: Colors.green,
-                icon: Icons.attach_money,
-                trend: '+15%',
-              ),
-              _buildKPICard(
-                title: 'متوسط قيمة الفاتورة',
-                value: '${avgInvoiceValue.toStringAsFixed(0)} جـ',
-                subtitle: 'متوسط كل طلب',
-                color: Colors.blue,
-                icon: Icons.receipt,
-              ),
-              _buildKPICard(
-                title: 'المبيعات المهدرة',
-                value: '${ordersCanceledTotal.toStringAsFixed(0)} جـ',
-                subtitle: 'قيمة الطلبات الملغية',
-                color: Colors.red,
-                icon: Icons.money_off,
-              ),
-              _buildKPICard(
-                title: 'معدل الفقدان',
-                value:
-                    '${((ordersCanceledTotal / (ordersDoneTotal + ordersCanceledTotal)) * 100).toStringAsFixed(1)}%',
-                subtitle: 'نسبة المبيعات المفقودة',
-                color: Colors.orange,
-                icon: Icons.trending_down,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Revenue Chart
-          Container(
-            height: 300,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                const Text(
-                  'مقارنة الإيرادات',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: darkBlueColor,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: (ordersDoneTotal + ordersCanceledTotal) * 1.2,
-                      barTouchData: const BarTouchData(enabled: true),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              switch (value.toInt()) {
-                                case 0:
-                                  return const Text('مبيعات محققة');
-                                case 1:
-                                  return const Text('مبيعات مهدرة');
-                                default:
-                                  return const Text('');
-                              }
-                            },
-                          ),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 50,
-                            getTitlesWidget: (value, meta) {
-                              return Text(
-                                '${(value / 1000).toStringAsFixed(0)}K',
-                                style: const TextStyle(fontSize: 12),
-                              );
-                            },
-                          ),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
+                    child: Text(
+                      trend,
+                      style: TextStyle(
+                        color:
+                            trend.startsWith('+') ? Colors.green : Colors.red,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
-                      barGroups: [
-                        BarChartGroupData(
-                          x: 0,
-                          barRods: [
-                            BarChartRodData(
-                              toY: ordersDoneTotal.toDouble(),
-                              color: Colors.green,
-                              width: 40,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(6),
-                                topRight: Radius.circular(6),
-                              ),
-                            ),
-                          ],
-                        ),
-                        BarChartGroupData(
-                          x: 1,
-                          barRods: [
-                            BarChartRodData(
-                              toY: ordersCanceledTotal.toDouble(),
-                              color: Colors.red,
-                              width: 40,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(6),
-                                topRight: Radius.circular(6),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
                     ),
                   ),
-                ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: darkBlueColor,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Expanded(
+              child: Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.visible,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildPerformanceTab(OrdersState state) {
-    if (state is! OrdersLoaded) return const SizedBox();
+  Widget _buildOverviewTab(ReportsState state) {
+    if (state is! ReportsLoaded) return const SizedBox();
 
-    final avgDelivery = state.averageDeliveryHours;
-    final clients = state.clients;
-    final ordersDone = state.ordersDone;
-    final ordersCanceled = state.ordersCanceled;
-    final canceledPercent = ordersCanceled.length /
-        (ordersDone.length + ordersCanceled.length) *
-        100;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Performance KPIs
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            childAspectRatio: 1.1,
-            children: [
-              _buildKPICard(
-                title: 'متوسط وقت التوصيل',
-                value: '${avgDelivery.toStringAsFixed(1)} ساعة',
-                subtitle: 'من الطلب للتسليم',
-                color: Colors.blue,
-                icon: Icons.timer,
-              ),
-              _buildKPICard(
-                title: 'عدد العملاء',
-                value: '${clients.length}',
-                subtitle: 'عملاء نشطين',
-                color: Colors.purple,
-                icon: Icons.people,
-                trend: '+5%',
-              ),
-              _buildKPICard(
-                title: 'معدل النجاح',
-                value: '${(100 - canceledPercent).toStringAsFixed(1)}%',
-                subtitle: 'نسبة الطلبات المكتملة',
-                color: Colors.green,
-                icon: Icons.check_circle,
-              ),
-              _buildKPICard(
-                title: 'معدل الإلغاء',
-                value: '${canceledPercent.toStringAsFixed(1)}%',
-                subtitle: 'نسبة الطلبات الملغية',
-                color: Colors.red,
-                icon: Icons.cancel,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Performance Chart
-          // Use a fixed height instead of Expanded to avoid overflow and overlapping
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min, // يخلي الارتفاع حسب المحتوى
-
+    return RefreshIndicator(
+      onRefresh: () => context.read<ReportsCubit>().refreshData(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          children: [
+            Wrap(
               children: [
-                const Text(
-                  'مؤشرات الأداء',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: darkBlueColor,
-                  ),
-                ),
-                const SizedBox(height: 20),
                 SizedBox(
-                  height: 180,
-                  child: LineChart(
-                    LineChartData(
-                      gridData: const FlGridData(show: true),
-                      titlesData: FlTitlesData(
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              const titles = [
-                                'الأسبوع 1',
-                                'الأسبوع 2',
-                                'الأسبوع 3',
-                                'الأسبوع 4'
-                              ];
-                              if (value.toInt() < titles.length) {
-                                return Text(titles[value.toInt()]);
-                              }
-                              return const Text('');
-                            },
-                          ),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 40,
-                            getTitlesWidget: (value, meta) {
-                              return Text('${value.toInt()}%');
-                            },
-                          ),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                      borderData: FlBorderData(show: true),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: const [
-                            FlSpot(0, 85),
-                            FlSpot(1, 88),
-                            FlSpot(2, 82),
-                            FlSpot(3, 92),
-                          ],
-                          isCurved: true,
-                          color: Colors.green,
-                          barWidth: 3,
-                          dotData: const FlDotData(show: true),
-                        ),
-                        LineChartBarData(
-                          spots: const [
-                            FlSpot(0, 15),
-                            FlSpot(1, 12),
-                            FlSpot(2, 18),
-                            FlSpot(3, 8),
-                          ],
-                          isCurved: true,
-                          color: Colors.red,
-                          barWidth: 3,
-                          dotData: const FlDotData(show: true),
-                        ),
-                      ],
-                    ),
+                  width: MediaQuery.of(context).size.width / 2 - 10,
+                  child: _buildKPICard(
+                    title: 'إجمالي الطلبات',
+                    value: '${state.totalOrders}',
+                    subtitle: _buildPeriodSubtitle(state),
+                    color: Colors.blue,
+                    icon: Icons.receipt_long,
+                    trend: state.totalOrders > 50 ? '+12%' : null,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildLegendItem('معدل النجاح', Colors.green),
-                    const SizedBox(width: 20),
-                    _buildLegendItem('معدل الإلغاء', Colors.red),
-                  ],
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2 - 10,
+                  child: _buildKPICard(
+                    title: 'الطلبات المكتملة',
+                    value: '${state.completedOrders}',
+                    subtitle: 'تم التوصيل بنجاح',
+                    color: Colors.green,
+                    icon: Icons.check_circle,
+                    trend: state.successRate > 80 ? '+8%' : null,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2 - 10,
+                  child: _buildKPICard(
+                    title: 'قيد التحضير',
+                    value: '${state.ordersPreparing.length}',
+                    subtitle: 'جاري العمل عليها',
+                    color: Colors.orange,
+                    icon: Icons.hourglass_top,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2 - 10,
+                  child: _buildKPICard(
+                    title: 'في انتظار التأكيد',
+                    value: '${state.ordersRecent.length}',
+                    subtitle: 'تحتاج مراجعة',
+                    color: Colors.purple,
+                    icon: Icons.pending_actions,
+                  ),
                 ),
               ],
             ),
+
+            const SizedBox(height: 24),
+
+            // Pie Chart Container
+            Container(
+              constraints: const BoxConstraints(maxHeight: 400),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'توزيع حالات الطلبات',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: darkBlueColor,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: _buildOrdersPieChart(state),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildPieChartLegend(state),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinancialTab(ReportsState state) {
+    if (state is! ReportsLoaded) return const SizedBox();
+
+    return RefreshIndicator(
+      onRefresh: () => context.read<ReportsCubit>().refreshData(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Wrap(
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2 - 20,
+                  child: _buildKPICard(
+                    title: 'إجمالي المبيعات',
+                    value: '${state.ordersDoneTotal.toStringAsFixed(0)} جـ',
+                    subtitle: 'المبيعات المحققة',
+                    color: Colors.green,
+                    icon: Icons.attach_money,
+                    trend: state.ordersDoneTotal > 10000 ? '+15%' : null,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2 - 20,
+                  child: _buildKPICard(
+                    title: 'المبيعات المهدرة',
+                    value: '${state.ordersCanceledTotal.toStringAsFixed(0)} جـ',
+                    subtitle: 'قيمة الطلبات الملغية',
+                    color: Colors.red,
+                    icon: Icons.money_off,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2 - 20,
+                  child: _buildKPICard(
+                    title: 'متوسط قيمة الفاتورة',
+                    value: '${state.averageOrderValue.toStringAsFixed(0)} جـ',
+                    subtitle: 'متوسط كل طلب',
+                    color: Colors.blue,
+                    icon: Icons.receipt,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2 - 20,
+                  child: _buildKPICard(
+                    title: 'معدل الفقدان',
+                    value: '${state.lossRate.toStringAsFixed(1)}%',
+                    subtitle: 'نسبة المبيعات المفقودة',
+                    color: Colors.orange,
+                    icon: Icons.trending_down,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Revenue Chart
+            Container(
+              height: 300,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'مقارنة الإيرادات',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: darkBlueColor,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: _buildRevenueBarChart(state),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPerformanceTab(ReportsState state) {
+    if (state is! ReportsLoaded) return const SizedBox();
+
+    return RefreshIndicator(
+      onRefresh: () => context.read<ReportsCubit>().refreshData(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Performance KPIs Grid
+            Wrap(
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2 - 20,
+                  child: _buildKPICard(
+                    title: 'متوسط وقت التوصيل',
+                    value:
+                        '${state.averageDeliveryHours.toStringAsFixed(1)} ساعة',
+                    subtitle: 'من الطلب للتسليم',
+                    color: Colors.blue,
+                    icon: Icons.timer,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2 - 20,
+                  child: _buildKPICard(
+                    title: 'عدد العملاء',
+                    value: '${state.totalClients}',
+                    subtitle: '\إعاد نشطين',
+                    color: Colors.purple,
+                    icon: Icons.people,
+                    trend: state.totalClients > 20 ? '+5%' : null,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2 - 20,
+                  child: _buildKPICard(
+                    title: 'معدل النجاح',
+                    value: '${state.successRate.toStringAsFixed(1)}%',
+                    subtitle: 'نسبة الطلبات المكتملة',
+                    color: Colors.green,
+                    icon: Icons.check_circle,
+                  ),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width / 2 - 20,
+                  child: _buildKPICard(
+                    title: 'معدل الإلغاء',
+                    value: '${state.canceledOrdersPercent.toStringAsFixed(1)}%',
+                    subtitle: 'نسبة الطلبات الملغية',
+                    color: Colors.red,
+                    icon: Icons.cancel,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Performance Chart
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'مؤشرات الأداء',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: darkBlueColor,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 180,
+                    child: _buildPerformanceLineChart(state),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildLegendItem('معدل النجاح', Colors.green),
+                      const SizedBox(width: 20),
+                      _buildLegendItem('معدل الإلغاء', Colors.red),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrdersPieChart(ReportsLoaded state) {
+    final sections = <PieChartSectionData>[];
+
+    if (state.completedOrders > 0) {
+      sections.add(PieChartSectionData(
+        color: Colors.green,
+        value: state.completedOrders.toDouble(),
+        title: '${state.completedOrders}',
+        radius: 80,
+        titleStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ));
+    }
+
+    if (state.ordersPreparing.isNotEmpty) {
+      sections.add(PieChartSectionData(
+        color: Colors.orange,
+        value: state.ordersPreparing.length.toDouble(),
+        title: '${state.ordersPreparing.length}',
+        radius: 80,
+        titleStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ));
+    }
+
+    if (state.ordersRecent.isNotEmpty) {
+      sections.add(PieChartSectionData(
+        color: Colors.purple,
+        value: state.ordersRecent.length.toDouble(),
+        title: '${state.ordersRecent.length}',
+        radius: 80,
+        titleStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ));
+    }
+
+    if (state.ordersCanceled.isNotEmpty) {
+      sections.add(PieChartSectionData(
+        color: Colors.red,
+        value: state.ordersCanceled.length.toDouble(),
+        title: '${state.ordersCanceled.length}',
+        radius: 80,
+        titleStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ));
+    }
+
+    return PieChart(
+      PieChartData(
+        sectionsSpace: 4,
+        centerSpaceRadius: 50,
+        sections: sections,
+      ),
+    );
+  }
+
+  Widget _buildPieChartLegend(ReportsLoaded state) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      children: [
+        if (state.completedOrders > 0) _buildLegendItem('مكتملة', Colors.green),
+        if (state.ordersPreparing.isNotEmpty)
+          _buildLegendItem('قيد التحضير', Colors.orange),
+        if (state.ordersRecent.isNotEmpty)
+          _buildLegendItem('في الانتظار', Colors.purple),
+        if (state.ordersCanceled.isNotEmpty)
+          _buildLegendItem('ملغية', Colors.red),
+      ],
+    );
+  }
+
+  Widget _buildRevenueBarChart(ReportsLoaded state) {
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: (state.ordersDoneTotal + state.ordersCanceledTotal) * 1.2,
+        barTouchData: BarTouchData(enabled: true),
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                switch (value.toInt()) {
+                  case 0:
+                    return const Text('مبيعات محققة');
+                  case 1:
+                    return const Text('مبيعات مهدرة');
+                  default:
+                    return const Text('');
+                }
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 50,
+              getTitlesWidget: (value, meta) {
+                return Text(
+                  '${(value / 1000).toStringAsFixed(0)}K',
+                  style: const TextStyle(fontSize: 12),
+                );
+              },
+            ),
+          ),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        ),
+        barGroups: [
+          BarChartGroupData(
+            x: 0,
+            barRods: [
+              BarChartRodData(
+                toY: state.ordersDoneTotal,
+                color: Colors.green,
+                width: 40,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(6),
+                  topRight: Radius.circular(6),
+                ),
+              ),
+            ],
+          ),
+          BarChartGroupData(
+            x: 1,
+            barRods: [
+              BarChartRodData(
+                toY: state.ordersCanceledTotal,
+                color: Colors.red,
+                width: 40,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(6),
+                  topRight: Radius.circular(6),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPerformanceLineChart(ReportsLoaded state) {
+    return LineChart(
+      LineChartData(
+        gridData: const FlGridData(show: true),
+        titlesData: FlTitlesData(
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) {
+                const titles = [
+                  'الأسبوع 1',
+                  'الأسبوع 2',
+                  'الأسبوع 3',
+                  'الأسبوع 4'
+                ];
+                if (value.toInt() < titles.length) {
+                  return Text(titles[value.toInt()]);
+                }
+                return const Text('');
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              getTitlesWidget: (value, meta) {
+                return Text('${value.toInt()}%');
+              },
+            ),
+          ),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        ),
+        borderData: FlBorderData(show: true),
+        lineBarsData: [
+          LineChartBarData(
+            spots: [
+              FlSpot(0, state.successRate),
+              FlSpot(1, state.successRate + 3),
+              FlSpot(2, state.successRate - 3),
+              FlSpot(3, state.successRate + 2),
+            ],
+            isCurved: true,
+            color: Colors.green,
+            barWidth: 3,
+            dotData: const FlDotData(show: true),
+          ),
+          LineChartBarData(
+            spots: [
+              FlSpot(0, state.canceledOrdersPercent),
+              FlSpot(1, state.canceledOrdersPercent - 2),
+              FlSpot(2, state.canceledOrdersPercent + 4),
+              FlSpot(3, state.canceledOrdersPercent - 1),
+            ],
+            isCurved: true,
+            color: Colors.red,
+            barWidth: 3,
+            dotData: const FlDotData(show: true),
           ),
         ],
       ),
@@ -632,6 +681,72 @@ class _ReportsState extends State<Reports> with TickerProviderStateMixin {
           Text(
             label,
             style: const TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _buildPeriodSubtitle(ReportsLoaded state) {
+    if (state.startDate != null && state.endDate != null) {
+      return 'من ${state.startDate!.day}/${state.startDate!.month}\n إلى ${state.endDate!.day}/${state.endDate!.month}';
+    }
+    return 'جميع الفترات';
+  }
+
+  Widget _buildEmptyState(ReportsEmpty state) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.inbox_outlined,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            state.message,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(ReportsError state) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 80,
+            color: Colors.red[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            state.message,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.red,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => context.read<ReportsCubit>().refreshData(),
+            icon: const Icon(Icons.refresh),
+            label: const Text('إعادة المحاولة'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
           ),
         ],
       ),
@@ -677,7 +792,7 @@ class _ReportsState extends State<Reports> with TickerProviderStateMixin {
                   startDate = start;
                   endDate = end;
                 });
-                // context.read<OrdersCubit>().fetchOrdersByPeriod(start, end);
+                context.read<ReportsCubit>().fetchOrdersByPeriod(start, end);
               },
             ),
           ),
@@ -711,12 +826,27 @@ class _ReportsState extends State<Reports> with TickerProviderStateMixin {
 
           // Content Section
           Expanded(
-            child: BlocBuilder<OrdersCubit, OrdersState>(
+            child: BlocBuilder<ReportsCubit, ReportsState>(
               builder: (context, state) {
-                if (state is OrdersLoading) {
+                if (state is ReportsLoading) {
                   return const Center(
-                    child: CircularProgressIndicator(),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('جاري تحليل البيانات...'),
+                      ],
+                    ),
                   );
+                }
+
+                if (state is ReportsError) {
+                  return _buildErrorState(state);
+                }
+
+                if (state is ReportsEmpty) {
+                  return _buildEmptyState(state);
                 }
 
                 return TabBarView(
