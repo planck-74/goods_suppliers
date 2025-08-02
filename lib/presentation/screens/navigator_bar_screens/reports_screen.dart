@@ -360,7 +360,7 @@ class _ReportsState extends State<Reports> with TickerProviderStateMixin {
                   child: _buildKPICard(
                     title: 'عدد العملاء',
                     value: '${state.totalClients}',
-                    subtitle: '\إعاد نشطين',
+                    subtitle: 'إعاد نشطين',
                     color: Colors.purple,
                     icon: Icons.people,
                     trend: state.totalClients > 20 ? '+5%' : null,
@@ -527,7 +527,7 @@ class _ReportsState extends State<Reports> with TickerProviderStateMixin {
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
         maxY: (state.ordersDoneTotal + state.ordersCanceledTotal) * 1.2,
-        barTouchData: BarTouchData(enabled: true),
+        barTouchData: const BarTouchData(enabled: true),
         titlesData: FlTitlesData(
           show: true,
           bottomTitles: AxisTitles(

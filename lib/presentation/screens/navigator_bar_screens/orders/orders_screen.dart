@@ -49,7 +49,7 @@ class _ordersState extends State<Orders> {
                 height: 40,
                 color: whiteColor,
                 child: TabBar(
-                    labelStyle: TextStyle(fontSize: 14, fontFamily: 'Cairo'),
+                    labelStyle: const TextStyle(fontSize: 14, fontFamily: 'Cairo'),
                     indicatorColor: Colors.grey,
                     isScrollable: true,
                     tabs: [
@@ -57,10 +57,10 @@ class _ordersState extends State<Orders> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text('حديث'),
-                            SizedBox(width: 6),
+                            const Text('حديث'),
+                            const SizedBox(width: 6),
                             Container(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: Colors.red,
@@ -71,27 +71,27 @@ class _ordersState extends State<Orders> {
                                   if (state is OrdersLoaded) {
                                     return Text(
                                       '${context.read<OrdersCubit>().ordersRecent.length}',
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     );
                                   }
-                                  return SizedBox();
+                                  return const SizedBox();
                                 },
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Tab(
+                      const Tab(
                         child: Text('جارٍ التحضير'),
                       ),
-                      Tab(
+                      const Tab(
                         child: Text('تم التوصيل'),
                       ),
-                      Tab(
+                      const Tab(
                         child: Text('ملغي'),
                       ),
                     ]),

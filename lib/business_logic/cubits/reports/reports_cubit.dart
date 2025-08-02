@@ -16,7 +16,7 @@ class ReportsCubit extends Cubit<ReportsState> {
 
       // Validate date range
       if (startDate.isAfter(endDate)) {
-        emit(ReportsError(
+        emit(const ReportsError(
           message: 'تاريخ البداية يجب أن يكون قبل تاريخ النهاية',
           errorCode: 'INVALID_DATE_RANGE',
         ));
@@ -78,7 +78,7 @@ class ReportsCubit extends Cubit<ReportsState> {
       final querySnapshot = await _firestore.collection('orders').get();
 
       if (querySnapshot.docs.isEmpty) {
-        emit(ReportsEmpty(message: 'لا توجد طلبات في النظام'));
+        emit(const ReportsEmpty(message: 'لا توجد طلبات في النظام'));
         return;
       }
 
