@@ -315,7 +315,7 @@ class _BuildFieldsState extends State<BuildFields> {
                         backgroundColor: Colors.green,
                       ),
                     );
-                    fetchAndSaveStoreId();
+                    // fetchAndSaveStoreId();
                     AuthService.saveLoginState(true);
                     Navigator.pushNamed(context, '/NavigatorBar');
                   });

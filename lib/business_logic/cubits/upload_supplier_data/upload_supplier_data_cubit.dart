@@ -76,7 +76,7 @@ class UploadSupplierDataCubit extends Cubit<UploadSupplierDataState> {
       ));
 
       if (!context.mounted) return;
-      fetchAndSaveStoreId();
+      // fetchAndSaveStoreId();
       Navigator.pushNamed(context, '/NavigatorBar');
       emit(UploadSupplierDataloaded());
     } catch (e) {

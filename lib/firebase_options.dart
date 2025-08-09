@@ -17,29 +17,17 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -54,9 +42,53 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDwmoR8ocO6rXPuxwyU0yOQZmc_a0Nd3H4',
-    appId: '1:267612126842:android:903d2ebd7b1ba990fbc5c3',
+    appId: '1:267612126842:android:33a7b40b15b96272fbc5c3',
     messagingSenderId: '267612126842',
     projectId: 'goods-for-exchange',
+    databaseURL: 'https://goods-for-exchange-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'goods-for-exchange.appspot.com',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBtyMm6CnG7s_6y633dXqO6nrAZgfFJ-zQ',
+    appId: '1:267612126842:web:42c36f24e6c238b0fbc5c3',
+    messagingSenderId: '267612126842',
+    projectId: 'goods-for-exchange',
+    authDomain: 'goods-for-exchange.firebaseapp.com',
+    databaseURL: 'https://goods-for-exchange-default-rtdb.europe-west1.firebasedatabase.app',
+    storageBucket: 'goods-for-exchange.appspot.com',
+    measurementId: 'G-EJ2K3M25TG',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyB6V204AdKsisTW7J4lxqTo62l_KJ5eiJw',
+    appId: '1:267612126842:ios:010ee70e66523af9fbc5c3',
+    messagingSenderId: '267612126842',
+    projectId: 'goods-for-exchange',
+    databaseURL: 'https://goods-for-exchange-default-rtdb.europe-west1.firebasedatabase.app',
+    storageBucket: 'goods-for-exchange.appspot.com',
+    iosBundleId: 'com.planck.goods',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyB6V204AdKsisTW7J4lxqTo62l_KJ5eiJw',
+    appId: '1:267612126842:ios:b98c262a1bb76e73fbc5c3',
+    messagingSenderId: '267612126842',
+    projectId: 'goods-for-exchange',
+    databaseURL: 'https://goods-for-exchange-default-rtdb.europe-west1.firebasedatabase.app',
+    storageBucket: 'goods-for-exchange.appspot.com',
+    iosBundleId: 'com.example.goods',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBtyMm6CnG7s_6y633dXqO6nrAZgfFJ-zQ',
+    appId: '1:267612126842:web:ea8897ccbf2570c6fbc5c3',
+    messagingSenderId: '267612126842',
+    projectId: 'goods-for-exchange',
+    authDomain: 'goods-for-exchange.firebaseapp.com',
+    databaseURL: 'https://goods-for-exchange-default-rtdb.europe-west1.firebasedatabase.app',
+    storageBucket: 'goods-for-exchange.appspot.com',
+    measurementId: 'G-DBJZBVV3PL',
+  );
+
 }
