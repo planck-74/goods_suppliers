@@ -88,7 +88,7 @@ class _RecentItemsCardState extends State<RecentItemsCard> {
           borderRadius: BorderRadius.circular(8.0),
           child: Image.network(
             widget.product['imageUrl'],
-            fit: BoxFit.fitWidth,
+            fit: BoxFit.contain,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
               return Center(

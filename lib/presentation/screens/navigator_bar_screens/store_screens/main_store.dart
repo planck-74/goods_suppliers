@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:goods/business_logic/cubits/search_main_store_cubit/search_main_store_cubit.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
-import 'package:goods/presentation/cards/card_available.dart';
-import 'package:goods/presentation/cards/card_offer.dart';
-import 'package:goods/presentation/cards/card_unavailable.dart';
 import 'package:goods/presentation/custom_widgets/custom_app_bar%20copy.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/store_screens/available_screen.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/store_screens/offer_screen.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/store_screens/unavailable_screen.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/presentation/sheets/sheet_store_search.dart';
 
 class Store extends StatefulWidget {

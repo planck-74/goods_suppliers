@@ -46,7 +46,7 @@ class _AvailableCardState extends State<AvailableCard> {
           borderRadius: BorderRadius.circular(8.0),
           child: Image.network(
             widget.product!['imageUrl'],
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
               return Center(
@@ -324,7 +324,7 @@ void _showSheet(BuildContext context, int index, Map<String, dynamic> product,
     context: context,
     isScrollControlled: true,
     builder: (BuildContext context) {
-      return Sheetavailable(
+      return SheetAvailable(
         index: index,
         product: product,
         productData: productData,

@@ -8,13 +8,24 @@ import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/splash_screen.dart';
 import 'package:goods/services/auth_service.dart';
 import 'package:goods/services/notification_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp();
+
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  firestore.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+  );
+
   final notificationService = NotificationService(navigatorKey: navigatorKey);
   await notificationService.init();
+
   await initStoreId();
+
   runApp(GoodsSuppliers());
 }
 

@@ -82,7 +82,7 @@ class ProductImage extends StatelessWidget {
             imageUrl!,
             height: imageHeight,
             width: imageWidth,
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
               return Center(

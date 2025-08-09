@@ -39,7 +39,7 @@ class _SheetOfferState extends State<SheetOffer> {
   @override
   void initState() {
     super.initState();
-    // _fetchStoreId();
+  
     _initializeTextControllers();
   }
 
@@ -196,7 +196,7 @@ class _SheetOfferState extends State<SheetOffer> {
                             isOnSale: checkBoxState,
                             classification: widget.product['classification'],
                             imageUrl: widget.product['imageUrl'],
-                            note: widget.product['note'],
+                            note: widget.product['note'] ?? '',
                             manufacturer: widget.product['manufacturer'],
                             size: widget.product['size'],
                             package: widget.product['package'],
