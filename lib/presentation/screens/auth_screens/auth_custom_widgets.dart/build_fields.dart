@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:goods/business_logic/cubits/get_supplier_data/get_supplier_data_cubit.dart';
+import 'package:goods/business_logic/cubits/search_main_store_cubit/search_main_store_cubit.dart';
 import 'package:goods/business_logic/cubits/sign/sign_cubit.dart';
 import 'package:goods/business_logic/cubits/supplier_data/controller_cubit.dart';
 import 'package:goods/data/functions/fetch_store_id.dart';
@@ -317,6 +319,8 @@ class _BuildFieldsState extends State<BuildFields> {
                     );
                     fetchAndSaveStoreId();
                     AuthService.saveLoginState(true);
+                             context.read<GetSupplierDataCubit>().getSupplierData();
+    context.read<SearchMainStoreCubit>().fetchAllStoreProducts(storeId);
                     Navigator.pushNamed(context, '/NavigatorBar');
                   });
                 } catch (e) {

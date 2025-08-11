@@ -64,9 +64,10 @@ class _StoreState extends State<Store> {
           body: Column(
             children: [
               Container(
-                height: 35,
+                height: 40,
                 color: Theme.of(context).hoverColor,
                 child: TabBar(
+                  isScrollable: false,
                   tabs: const [
                     Tab(text: 'عروض'),
                     Tab(text: 'موجود'),
@@ -78,7 +79,9 @@ class _StoreState extends State<Store> {
                 ),
               ),
               const Flexible(
+
                 child: TabBarView(
+                  physics: NeverScrollableScrollPhysics(),
                   children: [Offer(), Available(), UnAvailable()],
                 ),
               ),
@@ -87,4 +90,3 @@ class _StoreState extends State<Store> {
     );
   }
 }
- 

@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:goods/business_logic/providers.dart';
 import 'package:goods/business_logic/routes.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
+import 'package:goods/firebase_options.dart';
 import 'package:goods/presentation/splash_screen.dart';
 import 'package:goods/services/auth_service.dart';
 import 'package:goods/services/notification_service.dart';
@@ -13,6 +14,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+ 
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await Firebase.initializeApp();
 
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -24,9 +29,11 @@ void main() async {
   final notificationService = NotificationService(navigatorKey: navigatorKey);
   await notificationService.init();
 
+  
   await initStoreId();
 
   runApp(GoodsSuppliers());
+  
 }
 
 class GoodsSuppliers extends StatelessWidget {

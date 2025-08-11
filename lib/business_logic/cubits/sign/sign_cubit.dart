@@ -6,7 +6,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/business_logic/cubits/dynamic_cubit/dynamic_product_cubit.dart';
+import 'package:goods/business_logic/cubits/get_supplier_data/get_supplier_data_cubit.dart';
+import 'package:goods/business_logic/cubits/search_main_store_cubit/search_main_store_cubit.dart';
 import 'package:goods/business_logic/cubits/supplier_data/controller_cubit.dart';
+import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/data/models/supplier_model.dart';
 import 'package:goods/presentation/custom_widgets/snack_bar_errors.dart';
 import 'package:goods/services/auth_service.dart';
@@ -134,10 +137,14 @@ class SignCubit extends Cubit<SignState> {
 
       if (context.mounted) {
         if (!isRegistered) {
+          
           Navigator.pushReplacementNamed(context, '/GetSupplierDetailsScreen');
+     
         } else {
           const SnackBar(content: Text('تم تسجيل الدخول بنجاح!'));
           AuthService.saveLoginState(true);
+                   context.read<GetSupplierDataCubit>().getSupplierData();
+    context.read<SearchMainStoreCubit>().fetchAllStoreProducts(storeId);
           fetchStoreId(context);
           Navigator.pushReplacementNamed(context, '/NavigatorBar');
         }
