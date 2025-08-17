@@ -12,7 +12,7 @@ class ControllerCubit extends Cubit<ControllerState> {
   final TextEditingController categoryController = TextEditingController();
   final TextEditingController phoneNumber = TextEditingController();
   final TextEditingController secondPhoneNumber = TextEditingController();
-  GeoPoint? geoPoint;
+  GeoPoint? geoLocation;
   // ... other fields if needed
 
   /// Initialize controllers from a client map.
@@ -36,7 +36,7 @@ class ControllerCubit extends Cubit<ControllerState> {
     if (secondPhoneNumber.text.isEmpty) {
       secondPhoneNumber.text = client['secondPhoneNumber'] ?? '';
     }
-    geoPoint = client['geoPoint'];
+    geoLocation = client['geoLocation'];
   }
 
   String? category;

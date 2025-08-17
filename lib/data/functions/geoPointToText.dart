@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-String geoPointToText(GeoPoint geoPoint) {
-  return "${geoPoint.latitude},${geoPoint.longitude}";
+String geoLocationToText(GeoPoint geoLocation) {
+  return "${geoLocation.latitude},${geoLocation.longitude}";
 }

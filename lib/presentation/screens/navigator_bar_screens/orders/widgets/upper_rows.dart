@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:goods/data/functions/data_formater.dart';
-import 'package:goods/data/functions/geoPointToText.dart';
 import 'package:goods/data/functions/open_google_maps.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
+import 'package:goods/data/models/client_model.dart';
 import 'package:goods/data/models/order_model.dart';
 import 'package:goods/presentation/custom_widgets/rectangle_Elevated_button.dart';
 import 'package:goods/presentation/custom_widgets/top_bar.dart';
 
-Widget upperRows(BuildContext context, OrderModel order, client) {
+Widget upperRows(BuildContext context, OrderModel order, ClientModel client) {
   return Column(
     children: [
       Stack(
@@ -28,11 +28,11 @@ Widget upperRows(BuildContext context, OrderModel order, client) {
                   ),
                   TextButton(
                     onPressed: () {
-                      openGoogleMaps(
-                          client.geoPoint.latitude, client.geoPoint.longitude);
+                      openGoogleMaps(client.geoLocation.latitude,
+                          client.geoLocation.longitude);
                     },
                     child: Text(
-                      '${client.government} ${client.town}',
+                      client.addressTyped,
                       style: const TextStyle(
                           color: Colors.blue,
                           fontSize: 12,
@@ -48,25 +48,28 @@ Widget upperRows(BuildContext context, OrderModel order, client) {
             ],
           ),
           Positioned(
-            top: 40,
-            left: 0,
-            child: ElevatedButton2(
-              child: const Text(
-                'نسخ',
-                style: TextStyle(color: whiteColor),
-              ),
-              width: 75,
-              formKey: '',
-              onPressed: () {
-                Clipboard.setData(
-                  ClipboardData(text: geoPointToText(client.geoPoint)),
-                );
+              top: 40,
+              left: 0,
+              child: ElevatedButton2(
+                child: const Text(
+                  'نسخ',
+                  style: TextStyle(color: whiteColor),
+                ),
+                width: 75,
+                height: 30,
+                formKey: '',
+                onPressed: () {
+                  final latitude = client.geoLocation.latitude;
+                  final longitude = client.geoLocation.longitude;
+                  final googleMapsUrl =
+                      'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
 
-                showTopBar(context: context, message: 'تم النسخ إلى الحافظة ');
-              },
-              height: 30,
-            ),
-          ),
+                  Clipboard.setData(ClipboardData(text: googleMapsUrl));
+
+                  showTopBar(
+                      context: context, message: 'تم نسخ الموقع إلى الحافظة');
+                },
+              )),
         ],
       ),
       const Divider(),

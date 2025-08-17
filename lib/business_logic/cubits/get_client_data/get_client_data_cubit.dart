@@ -19,15 +19,15 @@ class GetClientDataCubit extends Cubit<GetClientDataState> {
       if (documentSnapshot.exists) {
         Map<String, dynamic>? clientData = documentSnapshot.data();
         client = {
-          'name': clientData?['name'],
-          'government': clientData?['government'],
-          'town': clientData?['town'],
-          'category': clientData?['category'],
-          'geoPoint': clientData?['geoPoint'],
-          'phoneNumber': clientData?['phoneNumber'],
-          'secondPhoneNumber': clientData?['secondPhoneNumber'],
-          'businessName': clientData?['businessName'],
-          'imageUrl': clientData?['imageUrl'],
+          'name': clientData!['name'],
+          'government': clientData['government'],
+          'town': clientData['town'],
+          'category': clientData['category'],
+          'geoLocation': clientData['geoLocation'],
+          'phoneNumber': clientData['phoneNumber'],
+          'secondPhoneNumber': clientData['secondPhoneNumber'],
+          'businessName': clientData['businessName'],
+          'imageUrl': clientData['imageUrl'],
         };
 
         Future.delayed(const Duration(seconds: 3), () {

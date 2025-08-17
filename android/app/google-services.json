@@ -8,9 +8,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:267612126842:android:903d2ebd7b1ba990fbc5c3",
+        "mobilesdk_app_id": "1:267612126842:android:33a7b40b15b96272fbc5c3",
         "android_client_info": {
-          "package_name": "com.example.goods"
+          "package_name": "com.planck.goods"
         }
       },
       "oauth_client": [],
@@ -27,9 +27,9 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:267612126842:android:fe3b6f14f63aed79fbc5c3",
+        "mobilesdk_app_id": "1:267612126842:android:172d2d2c0ac8d879fbc5c3",
         "android_client_info": {
-          "package_name": "com.example.goods_admin"
+          "package_name": "com.planck.goodsadmins"
         }
       },
       "oauth_client": [],

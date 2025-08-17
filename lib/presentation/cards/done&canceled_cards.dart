@@ -77,7 +77,8 @@ class DoneCanceledCards extends StatelessWidget {
                       formKey: '',
                       onPressed: () {
                         Clipboard.setData(
-                          ClipboardData(text: geoPointToText(client.geoPoint)),
+                          ClipboardData(
+                              text: geoLocationToText(client.geoLocation)),
                         );
                       },
                       height: 30,

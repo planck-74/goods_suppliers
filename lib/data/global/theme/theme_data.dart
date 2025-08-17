@@ -1,6 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:goods/data/functions/fetch_store_id.dart';
 
 // Colors
 const Color primaryColor = Color.fromARGB(255, 190, 30, 19);
@@ -8,19 +6,11 @@ const Color darkBlueColor = Color(0xFF012340);
 const Color whiteColor = Colors.white;
 const Color scaffoldBackgroundColor = Color.fromARGB(255, 232, 232, 232);
 const Color lightBackgroundColor = whiteColor;
-String supplierId = FirebaseAuth.instance.currentUser!.uid;
+String supplierId = 'w3Px6Xg8mnUgqJXknJDG9zpbL4Q2';
 String storeId = 'cafb6e90-0ab1-11f0-b25a-8b76462b3bd5';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-Future<void> initStoreId() async {
-  String? fetched = await getStoreId();
-  if (fetched != null) {
-    storeId = fetched;
-  } else {
-    storeId = ''; // fallback value
-    print("❌ Failed to initialize storeId");
-  }
-}
+ 
 
 ThemeData getThemeData() {
   return ThemeData(

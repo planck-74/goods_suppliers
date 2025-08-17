@@ -246,7 +246,7 @@ class _BuildFieldsState extends State<BuildFields> {
                 debugPrint('businessName: $businessName');
                 final category = cubit.category?.trim() ?? '';
                 debugPrint('category: $category');
-                final phoneNumber = cubit.phoneNumber.text.trim() ?? '';
+                final phoneNumber = cubit.phoneNumber.text.trim();
                 debugPrint('phoneNumber: $phoneNumber');
                 final secondPhoneNumber = cubit.secondPhoneNumber.text.trim();
                 debugPrint('secondPhoneNumber: $secondPhoneNumber');
@@ -254,8 +254,8 @@ class _BuildFieldsState extends State<BuildFields> {
                 debugPrint('government: $government');
                 final town = cubit.town?.trim() ?? '';
                 debugPrint('town: $town');
-                final geoPoint = cubit.geoPoint ?? const GeoPoint(0, 0);
-                debugPrint('geoPoint: $geoPoint');
+                final geoLocation = cubit.geoLocation ?? const GeoPoint(0, 0);
+                debugPrint('geoLocation: $geoLocation');
 
                 if (businessName.isEmpty ||
                     category.isEmpty ||
@@ -305,7 +305,7 @@ class _BuildFieldsState extends State<BuildFields> {
                           imageUrl: imageUrl,
                           phoneNumber: phoneNumber,
                           secondPhoneNumber: secondPhoneNumber,
-                          geoPoint: geoPoint,
+                          geoLocation: geoLocation,
                           storeId: uuid.v1(),
                           government: government,
                           town: town,
@@ -319,8 +319,10 @@ class _BuildFieldsState extends State<BuildFields> {
                     );
                     fetchAndSaveStoreId();
                     AuthService.saveLoginState(true);
-                             context.read<GetSupplierDataCubit>().getSupplierData();
-    context.read<SearchMainStoreCubit>().fetchAllStoreProducts(storeId);
+                    context.read<GetSupplierDataCubit>().getSupplierData();
+                    context
+                        .read<SearchMainStoreCubit>()
+                        .fetchAllStoreProducts(storeId);
                     Navigator.pushNamed(context, '/NavigatorBar');
                   });
                 } catch (e) {

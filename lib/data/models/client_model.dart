@@ -7,9 +7,10 @@ class ClientModel {
   final String imageUrl;
   final String phoneNumber;
   final String secondPhoneNumber;
-  final GeoPoint geoPoint;
+  final GeoPoint geoLocation;
   final String government;
   final String town;
+  final String addressTyped;
 
   ClientModel({
     required this.uid,
@@ -18,9 +19,10 @@ class ClientModel {
     required this.imageUrl,
     required this.phoneNumber,
     required this.secondPhoneNumber,
-    required this.geoPoint,
+    required this.geoLocation,
     required this.government,
     required this.town,
+    required this.addressTyped,
   });
 
   factory ClientModel.fromMap(Map<String, dynamic> map) {
@@ -31,11 +33,12 @@ class ClientModel {
       imageUrl: map['imageUrl'] ?? '',
       phoneNumber: map['phoneNumber'] ?? '',
       secondPhoneNumber: map['secondPhoneNumber'] ?? '',
-      geoPoint: map['geoPoint'] != null
-          ? GeoPoint(map['geoPoint'].latitude, map['geoPoint'].longitude)
+      geoLocation: map['geoLocation'] != null
+          ? GeoPoint(map['geoLocation'].latitude, map['geoLocation'].longitude)
           : const GeoPoint(0, 0),
       government: map['government'] ?? '',
       town: map['town'] ?? '',
+      addressTyped: map['addressTyped'] ?? '',
     );
   }
 
@@ -55,9 +58,10 @@ class ClientModel {
       'imageUrl': imageUrl,
       'phoneNumber': phoneNumber,
       'secondPhoneNumber': secondPhoneNumber,
-      'geoLocation': geoPoint,
+      'geoLocation': geoLocation,
       'government': government,
       'town': town,
+      'addressTyped': addressTyped,
     };
   }
 }

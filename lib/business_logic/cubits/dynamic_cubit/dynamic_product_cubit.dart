@@ -26,7 +26,6 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
           context: context, title: 'تمت', message: message);
       emit(DynamicProductLoaded());
     } catch (e) {
-      print(e);
       emit(DynamicProductError('Failed to add product: ${e.toString()}'));
     }
   }
@@ -53,8 +52,6 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
       });
 
       emit(DynamicProductLoaded());
-      print(
-          'Product marked as unavailable and offer fields reset successfully');
     } catch (e) {
       emit(DynamicProductError(
           'Failed to mark product as unavailable: ${e.toString()}'));
@@ -82,8 +79,6 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
       });
 
       emit(DynamicProductLoaded());
-      print(
-          'Product marked as unavailable and offer fields reset successfully');
     } catch (e) {
       emit(DynamicProductError(
           'Failed to mark product as unavailable: ${e.toString()}'));
@@ -149,23 +144,18 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
 
   Future<void> syncStoreProducts(BuildContext context, String storeId) async {
     try {
-      print('🔄 Starting synchronization...');
-      print('🏪 Store ID: $storeId');
 
       emit(DynamicProductLoading());
 
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
       // Get all store products
-      print('📦 Fetching store products...');
       final storeProductsSnapshot = await firestore
           .collection('stores')
           .doc(storeId)
           .collection('products')
           .get();
 
-      print(
-          '📊 Number of store products: ${storeProductsSnapshot.docs.length}');
 
       WriteBatch batch = firestore.batch();
       int updatedCount = 0;
@@ -175,15 +165,12 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
         final storeProduct = storeDoc.data();
         final productId = storeProduct['productId'];
 
-        print(
-            '🔍 Processing product: ${storeProduct['name']} (ID: $productId)');
 
         // Get corresponding main product
         final mainProductDoc =
             await firestore.collection('products').doc(productId).get();
 
         if (mainProductDoc.exists) {
-          print('✅ Found product in main collection');
           final mainProduct = mainProductDoc.data()!;
 
           // Update shared fields while preserving store-specific ones
@@ -200,16 +187,12 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
 
           batch.update(storeDoc.reference, updatedData);
           updatedCount++;
-          print('📝 Prepared update for product');
         } else {
-          print('⚠️ Product not found in main collection: $productId');
         }
       }
 
       // Commit all updates
-      print('💾 Saving updates...');
       await batch.commit();
-      print('✨ Successfully updated $updatedCount products');
 
       // Update UI
       emit(DynamicProductLoaded());
@@ -219,9 +202,7 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
         title: 'تم',
         message: 'تم تحديث بيانات المنتجات بنجاح',
       );
-      print('✅ Sync completed successfully');
     } catch (e) {
-      print('❌ Error during sync: $e');
       emit(
           DynamicProductError('حدث خطأ أثناء تحديث البيانات: ${e.toString()}'));
       showCustomPositionedSnackBarError(

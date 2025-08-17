@@ -19,7 +19,6 @@ class _RecentState extends State<Recent> {
   /// When true: orders are sorted from recent (newest) to past (oldest)
   /// When false: orders are sorted from oldest to newest.
   bool isRecentFirst = true;
- 
 
   Future<void> _refreshOrders() async {
     await context.read<OrdersCubit>().fetchOrders();
@@ -37,12 +36,13 @@ class _RecentState extends State<Recent> {
             sortedOrders.sort((a, b) {
               // Assuming order.date is a DateTime object.
               return isRecentFirst
-                  ? b.date.compareTo(a.date) // Descending: newest first.
-                  : a.date.compareTo(b.date); // Ascending: oldest first.
+                  ? b.date.compareTo(a.date) 
+                  : a.date.compareTo(b.date);  
             });
           }
 
           return Column(
+           
             children: [
               _buildClassificationBar(),
               Expanded(

@@ -46,7 +46,6 @@ class _AvailableState extends State<Available> {
   /// Apply classification filter using search cubit's local data
   /// This provides instant filtering without network requests
   void _applyClassificationFilter(String filterType, String value) {
-    print('Applying classification filter: $filterType = $value');
     
     // Store current filter state for reset functionality
     _currentFilterType = filterType;
@@ -64,7 +63,6 @@ class _AvailableState extends State<Available> {
   /// Clear all filters and show all available products
   /// This resets the view to show all available products without any filters
   void _clearAllFilters() {
-    print('Clearing all filters - showing all available products');
     
     // Clear filter state
     _currentFilterType = null;
@@ -86,7 +84,6 @@ class _AvailableState extends State<Available> {
 
   /// Handle refresh action - reload data from Firebase
   Future<void> _refreshData() async {
-    print('Refreshing available products data');
     
     // Refresh all data in search cubit
     await context.read<SearchMainStoreCubit>().refreshProductsData(storeId);

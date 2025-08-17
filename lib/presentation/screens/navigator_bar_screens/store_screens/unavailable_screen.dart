@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/business_logic/cubits/search_main_store_cubit/search_main_store_cubit.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/custom_widgets/custom_buttons/custom_buttons.dart';
-import 'package:goods/presentation/custom_widgets/custom_listview_builder_available.dart';
 import 'package:goods/presentation/custom_widgets/custom_listview_builder_unavailable.dart';
 import 'package:goods/presentation/sheets/sheet_classification_available.dart';
 import 'package:goods/presentation/skeletons/available_card_skeleton.dart';
@@ -47,7 +46,6 @@ class _AvailableState extends State<UnAvailable> {
   /// Apply classification filter using search cubit's local data
   /// This provides instant filtering without network requests
   void _applyClassificationFilter(String filterType, String value) {
-    print('Applying classification filter: $filterType = $value');
     
     // Store current filter state for reset functionality
     _currentFilterType = filterType;
@@ -65,7 +63,6 @@ class _AvailableState extends State<UnAvailable> {
   /// Clear all filters and show all unAvailable products
   /// This resets the view to show all unAvailable products without any filters
   void _clearAllFilters() {
-    print('Clearing all filters - showing all unAvailable products');
     
     // Clear filter state
     _currentFilterType = null;
@@ -87,7 +84,6 @@ class _AvailableState extends State<UnAvailable> {
 
   /// Handle refresh action - reload data from Firebase
   Future<void> _refreshData() async {
-    print('Refreshing unAvailable products data');
     
     // Refresh all data in search cubit
     await context.read<SearchMainStoreCubit>().refreshProductsData(storeId);

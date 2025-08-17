@@ -49,10 +49,10 @@ class OrdersCubit extends Cubit<OrdersState> {
           imageUrl: '',
           phoneNumber: '',
           secondPhoneNumber: '',
-          geoPoint: const GeoPoint(30.0444, 31.2357),
+          geoLocation: const GeoPoint(30.0444, 31.2357),
           category: '',
           government: '',
-          town: '',
+          town: '', addressTyped: '',
         );
         order.client = client;
 
@@ -153,10 +153,10 @@ class OrdersCubit extends Cubit<OrdersState> {
           imageUrl: '',
           phoneNumber: '',
           secondPhoneNumber: '',
-          geoPoint: const GeoPoint(30.0444, 31.2357),
+          geoLocation: const GeoPoint(30.0444, 31.2357),
           category: '',
           government: '',
-          town: '',
+          town: '', addressTyped: '',
         );
         order.client = client;
 

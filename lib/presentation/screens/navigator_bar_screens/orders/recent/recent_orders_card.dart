@@ -94,7 +94,6 @@ class _RecentOrdersCardState extends State<RecentOrdersCard>
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cardWidth = constraints.maxWidth * 0.96;
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -108,9 +107,8 @@ class _RecentOrdersCardState extends State<RecentOrdersCard>
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: whiteColor,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                width: cardWidth,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -273,13 +271,11 @@ class _RecentOrdersCardState extends State<RecentOrdersCard>
                 ),
               ),
             ),
-
-            // Sliding Note Drawer
             if (_hasNote)
               Positioned(
+                left: 10,
+                right: 10,
                 top: 0,
-                left: (constraints.maxWidth - cardWidth) / 2,
-                right: (constraints.maxWidth - cardWidth) / 2,
                 child: AnimatedBuilder(
                   animation: _slideAnimation,
                   builder: (context, child) {

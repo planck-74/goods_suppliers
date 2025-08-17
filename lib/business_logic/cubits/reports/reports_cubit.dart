@@ -214,6 +214,7 @@ class ReportsCubit extends Cubit<ReportsState> {
       }
     } catch (e) {
       // Log error but don't throw - continue processing other orders
+      // ignore: avoid_print
       print('Error fetching client $clientId: $e');
     }
 
@@ -224,10 +225,10 @@ class ReportsCubit extends Cubit<ReportsState> {
       imageUrl: '',
       phoneNumber: '',
       secondPhoneNumber: '',
-      geoPoint: const GeoPoint(30.0444, 31.2357), // Cairo coordinates
+      geoLocation: const GeoPoint(30.0444, 31.2357), // Cairo coordinates
       category: '',
       government: '',
-      town: '',
+      town: '', addressTyped: '',
     );
   }
 

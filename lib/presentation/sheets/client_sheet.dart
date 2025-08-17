@@ -136,7 +136,7 @@ class ClientDetailsSheet extends StatelessWidget {
           GestureDetector(
             onTap: () async {
               openGoogleMaps(
-                  client.geoPoint.latitude, client.geoPoint.longitude);
+                  client.geoLocation.latitude, client.geoLocation.longitude);
             },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 8),

@@ -70,9 +70,9 @@ class UploadSupplierDataCubit extends Cubit<UploadSupplierDataState> {
         imageUrl: downloadUrl,
         phoneNumber: controllerCubit.phoneNumber.text,
         secondPhoneNumber: controllerCubit.secondPhoneNumber.text,
-        geoPoint: controllerCubit.geoPoint ?? const GeoPoint(0, 0),
+        geoLocation: controllerCubit.geoLocation ?? const GeoPoint(0, 0),
         government: '',
-        town: '',
+        town: '', addressTyped: '',
       ));
 
       if (!context.mounted) return;

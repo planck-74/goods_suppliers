@@ -1,3 +1,4 @@
+import 'dart:io'; // <-- Add this
 import 'package:flutter/material.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/screens/auth_screens/sign_pages/sign.dart';
@@ -22,6 +23,15 @@ class AuthCheckState extends State<AuthCheck> {
   }
 
   Future<void> checkLoginStatus() async {
+    // If on Windows, skip login check
+    if (Platform.isWindows) {
+      setState(() {
+        isLoggedIn = true;
+        isLoading = false;
+      });
+      return;
+    }
+
     bool loginState = await AuthService.getLoginState();
 
     setState(() {
@@ -34,9 +44,10 @@ class AuthCheckState extends State<AuthCheck> {
   Widget build(BuildContext context) {
     if (isLoading) {
       return const Center(
-          child: CircularProgressIndicator(
-        color: darkBlueColor,
-      ));
+        child: CircularProgressIndicator(
+          color: darkBlueColor,
+        ),
+      );
     } else if (isLoggedIn) {
       return const NavigatorBar();
     } else {

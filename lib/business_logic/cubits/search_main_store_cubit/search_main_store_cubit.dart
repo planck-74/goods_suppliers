@@ -27,7 +27,6 @@ class SearchMainStoreCubit extends Cubit<SearchMainStoreState> {
   Future<void> fetchAllStoreProducts(String storeId) async {
     try {
       emit(SearchMainStoreLoading());
-      print('Fetching all products for store: $storeId');
       
       final collection = FirebaseFirestore.instance
           .collection('stores')
@@ -43,11 +42,9 @@ class SearchMainStoreCubit extends Cubit<SearchMainStoreState> {
       }).toList();
       
       _isDataLoaded = true;
-      print('Successfully loaded ${_allProducts.length} products locally');
       
       emit(SearchMainStoreInitial()); // Return to initial state after loading
     } catch (e) {
-      print('Error fetching all products: $e');
       emit(SearchMainStoreError('فشل في تحميل المنتجات: $e'));
     }
   }
@@ -64,7 +61,6 @@ class SearchMainStoreCubit extends Cubit<SearchMainStoreState> {
   }
   
   void _performLocalSearch(String query, int tabType) {
-    print('Performing local search with query: "$query" and tabType: $tabType');
     
     if (!_isDataLoaded) {
       emit(SearchMainStoreError('البيانات غير محملة. يرجى إعادة تشغيل التطبيق.'));
@@ -90,22 +86,17 @@ class SearchMainStoreCubit extends Cubit<SearchMainStoreState> {
           products = _allProducts;
       }
       
-      print('Base products for tab $tabType: ${products.length}');
       
       // Apply search filter if query is not empty
       // If query is empty, show all products for the current tab
       if (query.trim().isNotEmpty) {
         products = _performSmartSearch(products, query);
-        print('Filtered by search query: ${products.length}');
       } else {
-        print('No search query - showing all products for tab');
       }
       
       emit(SearchMainStoreLoaded(products));
-      print('Search completed. Results: ${products.length} products');
       
     } catch (e) {
-      print('Local search error: $e');
       emit(SearchMainStoreError('حدث خطأ في البحث: $e'));
     }
   }
@@ -134,7 +125,6 @@ class SearchMainStoreCubit extends Cubit<SearchMainStoreState> {
       }
       
       emit(SearchMainStoreLoaded(products));
-      print('Loaded ${products.length} products for tab type $tabType');
     } catch (e) {
       emit(SearchMainStoreError('حدث خطأ في تحميل المنتجات: $e'));
     }
@@ -229,20 +219,17 @@ class SearchMainStoreCubit extends Cubit<SearchMainStoreState> {
     final index = _allProducts.indexWhere((p) => p['productId'] == productId);
     if (index != -1) {
       _allProducts[index] = {..._allProducts[index], ...updatedData};
-      print('Updated product $productId locally');
     }
   }
   
   // Add new product locally
   void addProductLocally(Map<String, dynamic> product) {
     _allProducts.add(product);
-    print('Added new product locally: ${product['productId']}');
   }
   
   // Remove product locally
   void removeProductLocally(String productId) {
     _allProducts.removeWhere((p) => p['productId'] == productId);
-    print('Removed product $productId locally');
   }
   
   // Get total counts for different categories
@@ -285,7 +272,6 @@ void filterProductsByClassification({
   required String filterValue,
   required int tabType,
 }) {
-  print('Filtering products by classification: $filterType = $filterValue for tab $tabType');
   
   if (!_isDataLoaded) {
     emit(SearchMainStoreError('البيانات غير محملة. يرجى إعادة تشغيل التطبيق.'));
@@ -327,11 +313,9 @@ void filterProductsByClassification({
              productValueString.contains(filterValueString);
     }).toList();
     
-    print('Classification filter applied: ${tabProducts.length} -> ${filteredProducts.length} products');
     emit(SearchMainStoreLoaded(filteredProducts));
     
   } catch (e) {
-    print('Classification filtering error: $e');
     emit(SearchMainStoreError('حدث خطأ في تطبيق الفلتر: $e'));
   }
 }
@@ -340,7 +324,6 @@ void filterProductsByClassification({
 /// This method helps populate filter options in the classification sheet
 List<String> getUniqueClassificationValues(String classificationType, int tabType) {
   if (!_isDataLoaded) {
-    print('Data not loaded - cannot get classification values');
     return [];
   }
 
@@ -374,11 +357,9 @@ List<String> getUniqueClassificationValues(String classificationType, int tabTyp
     // Convert to list and sort alphabetically
     List<String> sortedValues = uniqueValues.toList()..sort();
     
-    print('Found ${sortedValues.length} unique values for $classificationType in tab $tabType');
     return sortedValues;
     
   } catch (e) {
-    print('Error getting unique classification values: $e');
     return [];
   }
 }
@@ -421,7 +402,6 @@ Map<String, int> getClassificationStats(String classificationType, int tabType) 
     return stats;
     
   } catch (e) {
-    print('Error getting classification stats: $e');
     return {};
   }
 }
@@ -432,7 +412,6 @@ void applyMultipleFilters({
   required Map<String, String> filters,
   required int tabType,
 }) {
-  print('Applying multiple filters: $filters for tab $tabType');
   
   if (!_isDataLoaded) {
     emit(SearchMainStoreError('البيانات غير محملة. يرجى إعادة تشغيل التطبيق.'));
@@ -476,11 +455,9 @@ void applyMultipleFilters({
       });
     }).toList();
     
-    print('Multiple filters applied: ${tabProducts.length} -> ${filteredProducts.length} products');
     emit(SearchMainStoreLoaded(filteredProducts));
     
   } catch (e) {
-    print('Multiple filters error: $e');
     emit(SearchMainStoreError('حدث خطأ في تطبيق الفلاتر: $e'));
   }
 }
@@ -510,11 +487,9 @@ void searchInFilteredResults(String query, List<Map<String, dynamic>> currentRes
     searchResults.sort((a, b) => _calculateRelevanceScore(b, normalizedQuery)
         .compareTo(_calculateRelevanceScore(a, normalizedQuery)));
     
-    print('Search in filtered results: ${currentResults.length} -> ${searchResults.length} products');
     emit(SearchMainStoreLoaded(searchResults));
     
   } catch (e) {
-    print('Search in filtered results error: $e');
     emit(SearchMainStoreError('حدث خطأ في البحث: $e'));
   }
 }
@@ -522,7 +497,6 @@ void searchInFilteredResults(String query, List<Map<String, dynamic>> currentRes
 /// Clear all filters for a specific tab and show all products
 /// This method resets the view to show all products without any classification filters
 void clearAllFiltersForTab(int tabType) {
-  print('Clearing all filters for tab $tabType');
   
   if (!_isDataLoaded) {
     emit(SearchMainStoreError('البيانات غير محملة. يرجى إعادة تشغيل التطبيق.'));
@@ -582,7 +556,6 @@ List<String> getAvailableFilterTypes(int tabType) {
     return filterTypes.toList()..sort();
     
   } catch (e) {
-    print('Error getting available filter types: $e');
     return [];
   }
 }

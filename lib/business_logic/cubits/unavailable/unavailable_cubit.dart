@@ -1,6 +1,5 @@
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:goods/business_logic/cubits/available/available_state.dart';
 import 'package:goods/business_logic/cubits/unavailable/unavailable_state.dart';
 
 class UnAvailableCubit extends Cubit<UnAvailableState> {
@@ -27,7 +26,6 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
    Future<void> fetchAllUnAvailableProducts(String storeId) async {
     try {
       emit(UnavailableLoading());
-      print('Fetching all available products for store: $storeId');
       
       if (storeId.isEmpty) {
         emit(UnavailableError('معرف المتجر فارغ'));
@@ -53,7 +51,6 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
         return data;
       }).toList();
 
-      print('Successfully loaded ${_allUnAvailableProducts.length} available products');
       
       // Apply current filter if one exists, otherwise show all products
       if (_currentFilterType != null && _currentFilterValue != null) {
@@ -64,14 +61,12 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
       }
       
     } catch (e) {
-      print('Error fetching all available products: $e');
       emit(UnavailableError('فشل في تحميل المنتجات المتاحة: $e'));
     }
   }
 
 
   void filterProducts(String filterType, String value) async {
-    print('Applying filter: $filterType = $value');
     
     // Store current filter for reapplication after refresh
     _currentFilterType = filterType;
@@ -100,14 +95,12 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
       return productValue != null && productValue.toString() == _currentFilterValue;
     }).toList();
 
-    print('Filtered ${_allUnAvailableProducts.length} products to ${filtered.length} products');
     emit(UnavailableLoaded(filtered));
   }
 
   /// Clear all filters and show all available products
   /// This method is called by the reset button in the UI
   void clearFiltersAndShowAll() {
-    print('Clearing all filters and showing all available products');
     
     // Clear current filter state
     _currentFilterType = null;
@@ -124,7 +117,6 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
     if (index != -1) {
       // Update the product in local storage
       _allUnAvailableProducts[index] = {..._allUnAvailableProducts[index], ...updatedData};
-      print('Updated product $productId locally');
       
       // Reapply current filter to reflect changes
       _applyCurrentFilter();
@@ -136,7 +128,6 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
     // Only add if the product is available
     if (product['availability'] == false) {
       _allUnAvailableProducts.add(product);
-      print('Added new available product locally: ${product['productId']}');
       
       // Reapply current filter to include new product if it matches
       _applyCurrentFilter();
@@ -146,7 +137,6 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
   /// Remove a product locally (when a product becomes unavailable or is deleted)
   void removeProductLocally(String productId) {
     _allUnAvailableProducts.removeWhere((p) => p['productId'] == productId);
-    print('Removed product $productId from available products');
     
     // Reapply current filter to reflect changes
     _applyCurrentFilter();
@@ -155,7 +145,6 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
   /// Search available products by name locally
   /// This provides instant search results without network requests
   void searchUnAvailableProducts(String storeId, String query) {
-    print('Searching available products with query: "$query"');
     
     if (query.trim().isEmpty) {
       // If search query is empty, apply current filter or show all
@@ -177,11 +166,9 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
         return normalizedName.contains(normalizedQuery);
       }).toList();
 
-      print('Search found ${searchResults.length} products');
       emit(UnavailableLoaded(searchResults));
       
     } catch (e) {
-      print('Search error: $e');
       emit(UnavailableError('حدث خطأ أثناء البحث: $e'));
     }
   }
@@ -239,14 +226,9 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
   @Deprecated('No longer needed with all-products approach')
   Future<void> fetchNextUnAvailableProductsPage(String storeId) async {
     // This method is no longer needed since we load all products at once
-    print('fetchNextUnAvailableProductsPage is deprecated - using all-products approach');
   }
 
-  @Deprecated('No longer needed with all-products approach')
-  Future<void> _fetchUnAvailableProductsPage(String storeId) async {
-    // This method is no longer needed since we load all products at once
-    print('_fetchUnAvailableProductsPage is deprecated - using all-products approach');
-  }
+ 
 
   @Deprecated('Use fetchAllUnAvailableProducts/filtering for better performance')
   Future<List<QueryDocumentSnapshot<Object?>>?> available(String storeId) async {
@@ -267,7 +249,6 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
         return null;
       }
     } catch (e) {
-      print('Error fetching static product: $e');
       return null;
     }
   }
@@ -280,7 +261,6 @@ class UnAvailableCubit extends Cubit<UnAvailableState> {
       productData!.removeAt(index);
       emit(UnavailableLoaded(productData!));
     } else {
-      print('Cannot eliminate product: productData is null or index is out of bounds.');
     }
   }
 }

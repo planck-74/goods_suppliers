@@ -7,7 +7,7 @@ class SupplierModel {
   final String imageUrl;
   final String phoneNumber;
   final String secondPhoneNumber;
-  final GeoPoint geoPoint;
+  final GeoPoint geoLocation;
   final String storeId;
   final String government;
   final String town;
@@ -19,7 +19,7 @@ class SupplierModel {
     required this.imageUrl,
     required this.phoneNumber,
     required this.secondPhoneNumber,
-    required this.geoPoint,
+    required this.geoLocation,
     required this.storeId,
     required this.government,
     required this.town,
@@ -33,7 +33,7 @@ class SupplierModel {
       imageUrl: map['imageUrl'] ?? '',
       phoneNumber: map['phoneNumber'] ?? '',
       secondPhoneNumber: map['secondPhoneNumber'] ?? '',
-      geoPoint: map['geoLocation'] != null
+      geoLocation: map['geoLocation'] != null
           ? GeoPoint(map['geoLocation'].latitude, map['geoLocation'].longitude)
           : const GeoPoint(0, 0),
       storeId: map['storeId'] ?? '',
@@ -58,7 +58,7 @@ class SupplierModel {
       'imageUrl': imageUrl,
       'phoneNumber': phoneNumber,
       'secondPhoneNumber': secondPhoneNumber,
-      'geoLocation': geoPoint,
+      'geoLocation': geoLocation,
       'storeId': storeId,
       'government': government,
       'town': town,

@@ -80,27 +80,20 @@ class SearchProductsCubit extends Cubit<SearchProductsState> {
 
     emit(SearchProductsLoading());
     try {
-      print('📥 Fetching all products from main collection...');
       final allProductsSnapshot = await firestore.collection('products').get();
-      print(
-          '✅ Total products found in main collection: ${allProductsSnapshot.docs.length}');
 
-      print('📥 Fetching products from store: $storeId ...');
       final storeProductsSnapshot = await firestore
           .collection('stores')
           .doc(storeId)
           .collection('products')
           .get();
-      print('✅ Total products in store: ${storeProductsSnapshot.docs.length}');
 
       final storeProductIds = storeProductsSnapshot.docs
           .map((doc) => doc.data()['productId']?.toString())
           .whereType<String>()
           .toSet();
 
-      print('🧮 Store product IDs:');
       for (var id in storeProductIds) {
-        print('  - $id');
       }
 
       final filteredProducts = allProductsSnapshot.docs.where((doc) {
@@ -116,7 +109,6 @@ class SearchProductsCubit extends Cubit<SearchProductsState> {
       emit(SearchProductsInitial(products: _filteredProducts));
       return filteredProducts;
     } catch (e) {
-      print('❌ Error fetching products not in store: $e');
       emit(SearchProductsInitial(products: const []));
       return [];
     }
@@ -140,27 +132,21 @@ class SearchProductsCubit extends Cubit<SearchProductsState> {
   }
 
   void removeAddedProductsFromList(List<String> addedProductIds) {
-    print("🧽 removeAddedProductsFromList called");
 
     final idsToRemove = addedProductIds.map((e) => e.toString()).toSet();
 
-    print("🟨 Product IDs to remove: $idsToRemove");
 
-    print("🗂️ Filtered products before: \\${_filteredProducts.length}");
 
     _filteredProducts.removeWhere((product) {
       final pid = product['productId'].toString();
       if (idsToRemove.contains(pid)) {
-        print("❌ Removing from _filteredProducts: $pid");
         return true;
       }
       return false;
     });
 
-    print("📁 Filtered products after: \\${_filteredProducts.length}");
 
     if (state is SearchProductsLoaded) {
-      print("🔵 State is SearchProductsLoaded");
 
       final currentResults = (state as SearchProductsLoaded).products;
 
@@ -169,13 +155,10 @@ class SearchProductsCubit extends Cubit<SearchProductsState> {
         return !idsToRemove.contains(pid);
       }).toList();
 
-      print("✅ Visible results after removal: \\${updatedResults.length}");
       emit(SearchProductsLoaded(updatedResults));
     } else if (state is SearchProductsInitial) {
-      print("🟢 State is SearchProductsInitial");
       emit(SearchProductsInitial(products: _filteredProducts));
     } else {
-      print("⚠️ State is \\${state.runtimeType}, no update done");
     }
   }
 }

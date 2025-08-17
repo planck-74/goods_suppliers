@@ -19,15 +19,11 @@ Future<void> fetchAndSaveStoreId() async {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('storeId', storeId);
 
-        print('✅ storeId saved to SharedPreferences: $storeId');
       } else {
-        print('❌ "storeId" field not found in supplier document');
       }
     } else {
-      print('❌ Supplier document does not exist for UID: $supplierId');
     }
   } catch (e) {
-    print('❌ Error fetching and saving storeId: $e');
   }
 }
 
@@ -47,10 +43,8 @@ Future<String?> getStoreId() async {
         return fetchedStoreId;
       } else {}
     } else {
-      print('❌ Supplier document does not exist for current user');
     }
   } catch (e) {
-    print('❌ Error fetching storeId: $e');
   }
 
   return null;

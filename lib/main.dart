@@ -1,4 +1,7 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,30 +13,36 @@ import 'package:goods/presentation/splash_screen.dart';
 import 'package:goods/services/auth_service.dart';
 import 'package:goods/services/notification_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
- 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await Firebase.initializeApp();
 
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
+   FirebaseFirestore firestore = FirebaseFirestore.instance;
   firestore.settings = const Settings(
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  final notificationService = NotificationService(navigatorKey: navigatorKey);
-  await notificationService.init();
+  final bool isSupportedForFCM = kIsWeb || Platform.isAndroid || Platform.isIOS;
+
+  if (isSupportedForFCM) {
+    final notificationService = NotificationService(navigatorKey: navigatorKey);
+    try {
+      await notificationService.init();
+    } on MissingPluginException catch (e) {
+      debugPrint('FCM plugin not implemented on this platform: $e');
+    } catch (e, st) {
+      debugPrint('Failed to init NotificationService: $e\n$st');
+    }
+  } else {
+    debugPrint('Skipping FirebaseMessaging init on desktop (no platform implementation).');
+  }
 
   
-  await initStoreId();
 
-  runApp(GoodsSuppliers());
-  
+  runApp( GoodsSuppliers());
 }
 
 class GoodsSuppliers extends StatelessWidget {

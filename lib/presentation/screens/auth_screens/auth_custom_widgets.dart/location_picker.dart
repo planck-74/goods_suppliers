@@ -109,7 +109,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                 FloatingActionButton(
                   onPressed: () {
                     if (_selectedLocation != _initialPosition) {
-                      context.read<ControllerCubit>().geoPoint = GeoPoint(
+                      context.read<ControllerCubit>().geoLocation = GeoPoint(
                           _selectedLocation.latitude,
                           _selectedLocation.longitude);
 
