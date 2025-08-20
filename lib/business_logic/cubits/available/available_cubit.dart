@@ -5,20 +5,17 @@ import 'package:goods/business_logic/cubits/available/available_state.dart';
 class AvailableCubit extends Cubit<AvailableState> {
   AvailableCubit() : super(AvailableInitial());
 
-  // Store all available products locally for fast filtering
-  // This approach eliminates the need for pagination and provides instant filtering
+
   List<Map<String, dynamic>> _allAvailableProducts = [];
-  
-  // Keep track of current filter state
+
   String? _currentFilterType;
   String? _currentFilterValue;
-  
-  // Legacy fields kept for backward compatibility but not used in new approach
+
   List<Map<String, dynamic>>? productData;
   List<Map<String, dynamic>> filteredProducts = [];
   List<QueryDocumentSnapshot> availableProducts = [];
   
-  // Pagination fields (no longer needed but kept for compatibility)
+ 
   static const int pageSize = 20;
   DocumentSnapshot? lastDocument;
   bool hasMore = true;

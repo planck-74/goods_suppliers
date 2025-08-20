@@ -6,6 +6,8 @@ import 'package:goods/presentation/custom_widgets/custom_buttons/custom_buttons.
 import 'package:goods/presentation/custom_widgets/custom_listview_builder_available.dart';
 import 'package:goods/presentation/sheets/sheet_classification_available.dart';
 import 'package:goods/presentation/skeletons/available_card_skeleton.dart';
+import 'package:goods/business_logic/cubits/available/available_cubit.dart';
+import 'package:goods/business_logic/cubits/available/available_state.dart';
 
 class Available extends StatefulWidget {
   const Available({super.key});
@@ -43,25 +45,21 @@ class _AvailableState extends State<Available> {
     }
   }
 
-  /// Apply classification filter using search cubit's local data
-  /// This provides instant filtering without network requests
+ 
   void _applyClassificationFilter(String filterType, String value) {
     
     // Store current filter state for reset functionality
     _currentFilterType = filterType;
     _currentFilterValue = value;
     
-    // Use the search cubit's filtering capability
-    // We'll need to extend SearchMainStoreCubit to support classification filtering
+ 
     context.read<SearchMainStoreCubit>().filterProductsByClassification(
       filterType: filterType,
       filterValue: value,
       tabType: 1, // Available products tab
     );
   }
-
-  /// Clear all filters and show all available products
-  /// This resets the view to show all available products without any filters
+ 
   void _clearAllFilters() {
     
     // Clear filter state
