@@ -31,12 +31,17 @@ Widget upperRows(BuildContext context, OrderModel order, ClientModel client) {
                       openGoogleMaps(client.geoLocation.latitude,
                           client.geoLocation.longitude);
                     },
-                    child: Text(
-                      client.addressTyped,
-                      style: const TextStyle(
-                          color: Colors.blue,
-                          fontSize: 12,
-                          decoration: TextDecoration.underline),
+                    child: SizedBox(
+                      width: MediaQuery.sizeOf(context).width * .5,
+                      child: Text(
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        client.addressTyped,
+                        style: const TextStyle(
+                            color: Colors.blue,
+                            fontSize: 12,
+                            decoration: TextDecoration.underline),
+                      ),
                     ),
                   )
                 ],
