@@ -61,15 +61,12 @@ class StoreSearchSheetState extends State<StoreSearchSheet> {
         _isBulkEditMode = false;
       });
 
-      // Always perform search/filter for the new tab
-      // This ensures the results are updated based on the current tab and search query
       _performSearch();
     }
   }
 
   void _performSearch() {
-    // Always search with current query and tab index
-    // If query is empty, it will show all products for the current tab
+
     context.read<SearchMainStoreCubit>().searchProductsByName(
           _searchQuery,
           _currentTabIndex,
