@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/business_logic/cubits/dynamic_cubit/dynamic_product_cubit.dart';
 import 'package:goods/business_logic/cubits/dynamic_cubit/dynamic_product_state.dart';
-import 'package:goods/business_logic/cubits/unavailable/unavailable_cubit.dart';
+import 'package:goods/business_logic/cubits/available/available_cubit.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/data/models/supplier_product_model.dart';
 import 'package:goods/presentation/custom_widgets/counter.dart';
@@ -12,14 +12,10 @@ import 'package:goods/presentation/sheets/price_quantity_section.dart';
 
 class SheetAvailable extends StatefulWidget {
   final Map<String, dynamic> product;
-  final List<dynamic> productData;
-  final int index;
 
   const SheetAvailable({
     super.key,
     required this.product,
-    required this.productData,
-    required this.index,
   });
 
   @override
@@ -56,6 +52,13 @@ class _SheetAvailableState extends State<SheetAvailable>
     _initializeTextControllers();
     _addListeners();
     _validateForm();
+
+    // Initialize checkBoxState based on current product state
+    checkBoxState = widget.product['isOnSale'] ?? false;
+    if (widget.product['endDate'] != null &&
+        widget.product['endDate'] is DateTime) {
+      selectedDate = widget.product['endDate'];
+    }
   }
 
   void _initializeAnimations() {
@@ -209,11 +212,33 @@ class _SheetAvailableState extends State<SheetAvailable>
       return;
     }
 
+   
+    final productId = widget.product['productId'];
+    if (productId == null) {
+      _showValidationError('خطأ: معرف المنتج غير موجود');
+      return;
+    }
+
     HapticFeedback.heavyImpact();
 
     try {
+      // Prepare updated product data
+      final updatedData = {
+        'availability': isAvailable,
+        'price': int.parse(priceController.text),
+        'maxOrderQuantity': int.parse(maxQuantityController.text),
+        'minOrderQuantity': int.parse(minQuantityController.text),
+        'offerPrice':
+            checkBoxState ? int.parse(offerPriceController.text) : null,
+        'maxOrderQuantityForOffer':
+            checkBoxState ? int.parse(maxQuantityControllerOffer.text) : null,
+        'endDate': checkBoxState ? selectedDate : null,
+        'isOnSale': checkBoxState,
+      };
+
+      // Create product model for the dynamic cubit
       final product = Product(
-        productId: widget.product['productId'],
+        productId: productId,
         availability: isAvailable,
         price: int.parse(priceController.text),
         maxOrderQuantity: int.parse(maxQuantityController.text),
@@ -233,16 +258,21 @@ class _SheetAvailableState extends State<SheetAvailable>
         salesCount: widget.product['salesCount'],
       );
 
-      context.read<DynamicProductCubit>().addDynamicProduct(
+      // Update product in Firebase
+      await context.read<DynamicProductCubit>().addDynamicProduct(
             context,
             product,
             storeId,
             message: checkBoxState
                 ? 'تم إضافة المنتج كعرض بنجاح!'
-                : 'أصبح المنتج الان معروض للعميل',
+                : 'تم تحديث المنتج بنجاح',
           );
 
-      context.read<UnAvailableCubit>().eliminateProduct(index: widget.index);
+      // Update local data in the available cubit
+      context.read<AvailableCubit>().updateProductLocally(
+            productId,
+            updatedData,
+          );
 
       // Success feedback
       HapticFeedback.heavyImpact();
@@ -254,6 +284,7 @@ class _SheetAvailableState extends State<SheetAvailable>
       }
     } catch (e) {
       _showValidationError('حدث خطأ في حفظ البيانات، يرجى المحاولة مرة أخرى');
+      print('Error updating product: $e');
     }
   }
 
@@ -385,6 +416,11 @@ class _SheetAvailableState extends State<SheetAvailable>
                     'الشركة المصنعة: ${widget.product['manufacturer']}',
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
+                // Show Product ID for debugging (can be removed in production)
+                Text(
+                  'ID: ${widget.product['productId'] ?? 'غير محدد'}',
+                  style: TextStyle(color: Colors.grey[400], fontSize: 10),
+                ),
               ],
             ),
           ),
@@ -613,7 +649,6 @@ class _SheetAvailableState extends State<SheetAvailable>
       color: Colors.grey[200],
     );
   }
-
   Widget _buildBottomActions() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),

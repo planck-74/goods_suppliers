@@ -7,11 +7,11 @@ import 'package:goods/data/models/order_model.dart';
 
 class OrdersCubit extends Cubit<OrdersState> {
   final FirebaseFirestore db = FirebaseFirestore.instance;
-  final List<OrderModel> ordersRecent = [];
-  final List<OrderModel> ordersPreparing = [];
-  final List<OrderModel> ordersDone = [];
-  final List<OrderModel> ordersCanceled = [];
-  final List<OrderModel> orders = [];
+  static const int pageSize = 10; // Number of items per page
+  
+  // Cache for all orders to avoid refetching
+  final Map<String, OrderModel> _ordersCache = {};
+  
   List<TextEditingController> controllers = [];
   List<Map> selectedProducts = [];
   List<bool> selectionList = [];
@@ -24,128 +24,189 @@ class OrdersCubit extends Cubit<OrdersState> {
 
   OrdersCubit() : super(OrdersInitial());
 
-  /// Fetch all orders without filtering.
-  Future<List<OrderModel>> fetchOrders() async {
+  /// Initial fetch for all tabs - fetches first page of each order state
+  Future<void> fetchInitialOrders() async {
     emit(OrdersLoading());
     try {
-      final querySnapshot = await db.collection('orders').get();
-      final ordersData = querySnapshot.docs
-          .map((doc) => OrderModel.fromFirestore(doc))
-          .toList();
+      // Fetch first page for each state
+      final recentData = await _fetchOrdersByState('جاري التاكيد', null);
+      final preparingData = await _fetchOrdersByState('جاري التحضير', null);
+      final doneData = await _fetchOrdersByState('تم التوصيل', null);
+      final canceledData = await _fetchOrdersByState('ملغي', null);
 
-      // Reset lists and totals
-      ordersRecent.clear();
-      ordersPreparing.clear();
-      ordersDone.clear();
-      ordersCanceled.clear();
-      ordersDoneTotal = 0;
-      ordersCanceledTotal = 0;
-
-      for (var order in ordersData) {
-        ClientModel? client = await fetchClient(order.clientId);
-        client ??= ClientModel(
-          uid: '',
-          businessName: '',
-          imageUrl: '',
-          phoneNumber: '',
-          secondPhoneNumber: '',
-          geoLocation: const GeoPoint(30.0444, 31.2357),
-          category: '',
-          government: '',
-          town: '', addressTyped: '',
-        );
-        order.client = client;
-
-        switch (order.state) {
-          case 'جاري التاكيد':
-            ordersRecent.add(order);
-            break;
-          case 'جاري التحضير':
-            ordersPreparing.add(order);
-            break;
-          case 'تم التوصيل':
-            ordersDone.add(order);
-            break;
-          case 'ملغي':
-            ordersCanceled.add(order);
-            break;
-        }
-      }
-
-      // Calculate totals for ordersDone and ordersCanceled
-      ordersDoneTotal =
-          ordersDone.fold(0, (sum, order) => sum + order.totalWithOffer);
-      ordersCanceledTotal =
-          ordersCanceled.fold(0, (sum, order) => sum + order.totalWithOffer);
-      canceledOrdersPercent = (ordersCanceled.length /
-              (ordersDone.length + ordersCanceled.length)) *
-          100;
-
-      // Collect unique client ids from ordersDone
-      clients.clear();
-      for (var order in ordersDone) {
-        if (order.client?.uid != null && !clients.contains(order.client!.uid)) {
-          clients.add(order.client!.uid);
-        }
-      }
-
-      // Compute average delivery period (in hours) based on 'date' and 'doneAt'
-      double totalDeliveryHours = 0;
-      int deliveryCount = 0;
-      for (var order in ordersDone) {
-        if (order.doneAt != null) {
-          DateTime orderDate = order.date.toDate();
-          DateTime orderDoneAt = order.doneAt!.toDate();
-          double diffHours = orderDoneAt.difference(orderDate).inMinutes / 60.0;
-          totalDeliveryHours += diffHours;
-          deliveryCount++;
-        }
-      }
-      averageDeliveryHours =
-          deliveryCount > 0 ? totalDeliveryHours / deliveryCount : 0;
+      // Calculate statistics for done and canceled orders
+      _calculateStatistics(doneData.orders, canceledData.orders);
 
       emit(OrdersLoaded(
-        ordersData,
-        ordersRecent,
-        ordersPreparing,
-        ordersDone,
-        ordersCanceled,
-        selectedProducts,
-        clients,
-        ordersDoneTotal,
-        ordersCanceledTotal,
-        averageDeliveryHours,
+        orders: [],
+        ordersRecent: recentData.orders,
+        ordersPreparing: preparingData.orders,
+        ordersDone: doneData.orders,
+        ordersCanceled: canceledData.orders,
+        selectedProducts: selectedProducts,
+        clients: clients,
+        ordersDoneTotal: ordersDoneTotal,
+        ordersCanceledTotal: ordersCanceledTotal,
+        averageDeliveryHours: averageDeliveryHours,
+        hasMoreRecent: recentData.hasMore,
+        hasMorePreparing: preparingData.hasMore,
+        hasMoreDone: doneData.hasMore,
+        hasMoreCanceled: canceledData.hasMore,
+        lastRecentDoc: recentData.lastDoc,
+        lastPreparingDoc: preparingData.lastDoc,
+        lastDoneDoc: doneData.lastDoc,
+        lastCanceledDoc: canceledData.lastDoc,
       ));
-      return ordersData;
     } catch (e) {
-      emit(OrdersError());
-      return [];
+      emit(OrdersError('Error fetching orders: ${e.toString()}'));
     }
   }
- 
-  Future<List<OrderModel>> fetchOrdersByPeriod(
-      DateTime start, DateTime end) async {
-    emit(OrdersLoading());
+
+  /// Load more recent orders
+  Future<void> loadMoreRecentOrders() async {
+    final currentState = state;
+    if (currentState is! OrdersLoaded || 
+        !currentState.hasMoreRecent || 
+        currentState.isLoadingMoreRecent) return;
+
+    emit(currentState.copyWith(isLoadingMoreRecent: true));
+
     try {
-      final querySnapshot = await db
-          .collection('orders')
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
-          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(end))
-          .get();
+      final result = await _fetchOrdersByState(
+        'جاري التاكيد', 
+        currentState.lastRecentDoc
+      );
 
-      final ordersData = querySnapshot.docs
-          .map((doc) => OrderModel.fromFirestore(doc))
-          .toList();
+      final updatedRecent = [...currentState.ordersRecent, ...result.orders];
 
-      // Reset lists and totals
-      ordersRecent.clear();
-      ordersPreparing.clear();
-      ordersDone.clear();
-      ordersCanceled.clear();
-      ordersDoneTotal = 0;
-      ordersCanceledTotal = 0;
+      emit(currentState.copyWith(
+        ordersRecent: updatedRecent,
+        hasMoreRecent: result.hasMore,
+        lastRecentDoc: result.lastDoc,
+        isLoadingMoreRecent: false,
+      ));
+    } catch (e) {
+      emit(currentState.copyWith(isLoadingMoreRecent: false));
+    }
+  }
 
-      for (var order in ordersData) {
+  /// Load more preparing orders
+  Future<void> loadMorePreparingOrders() async {
+    final currentState = state;
+    if (currentState is! OrdersLoaded || 
+        !currentState.hasMorePreparing || 
+        currentState.isLoadingMorePreparing) return;
+
+    emit(currentState.copyWith(isLoadingMorePreparing: true));
+
+    try {
+      final result = await _fetchOrdersByState(
+        'جاري التحضير', 
+        currentState.lastPreparingDoc
+      );
+
+      final updatedPreparing = [...currentState.ordersPreparing, ...result.orders];
+
+      emit(currentState.copyWith(
+        ordersPreparing: updatedPreparing,
+        hasMorePreparing: result.hasMore,
+        lastPreparingDoc: result.lastDoc,
+        isLoadingMorePreparing: false,
+      ));
+    } catch (e) {
+      emit(currentState.copyWith(isLoadingMorePreparing: false));
+    }
+  }
+
+  /// Load more done orders
+  Future<void> loadMoreDoneOrders() async {
+    final currentState = state;
+    if (currentState is! OrdersLoaded || 
+        !currentState.hasMoreDone || 
+        currentState.isLoadingMoreDone) return;
+
+    emit(currentState.copyWith(isLoadingMoreDone: true));
+
+    try {
+      final result = await _fetchOrdersByState(
+        'تم التوصيل', 
+        currentState.lastDoneDoc
+      );
+
+      final updatedDone = [...currentState.ordersDone, ...result.orders];
+      
+      // Recalculate statistics with new done orders
+      _calculateStatistics(updatedDone, currentState.ordersCanceled);
+
+      emit(currentState.copyWith(
+        ordersDone: updatedDone,
+        hasMoreDone: result.hasMore,
+        lastDoneDoc: result.lastDoc,
+        isLoadingMoreDone: false,
+        ordersDoneTotal: ordersDoneTotal,
+        averageDeliveryHours: averageDeliveryHours,
+      ));
+    } catch (e) {
+      emit(currentState.copyWith(isLoadingMoreDone: false));
+    }
+  }
+
+  /// Load more canceled orders
+  Future<void> loadMoreCanceledOrders() async {
+    final currentState = state;
+    if (currentState is! OrdersLoaded || 
+        !currentState.hasMoreCanceled || 
+        currentState.isLoadingMoreCanceled) return;
+
+    emit(currentState.copyWith(isLoadingMoreCanceled: true));
+
+    try {
+      final result = await _fetchOrdersByState(
+        'ملغي', 
+        currentState.lastCanceledDoc
+      );
+
+      final updatedCanceled = [...currentState.ordersCanceled, ...result.orders];
+      
+      // Recalculate statistics with new canceled orders
+      _calculateStatistics(currentState.ordersDone, updatedCanceled);
+
+      emit(currentState.copyWith(
+        ordersCanceled: updatedCanceled,
+        hasMoreCanceled: result.hasMore,
+        lastCanceledDoc: result.lastDoc,
+        isLoadingMoreCanceled: false,
+        ordersCanceledTotal: ordersCanceledTotal,
+      ));
+    } catch (e) {
+      emit(currentState.copyWith(isLoadingMoreCanceled: false));
+    }
+  }
+
+  /// Helper method to fetch orders by state with pagination
+  Future<_PaginatedResult> _fetchOrdersByState(
+    String orderState,
+    DocumentSnapshot? lastDoc,
+  ) async {
+    Query query = db.collection('orders')
+        .where('state', isEqualTo: orderState)
+        .orderBy('date', descending: true)
+        .limit(pageSize);
+
+    if (lastDoc != null) {
+      query = query.startAfterDocument(lastDoc);
+    }
+
+    final querySnapshot = await query.get();
+    final List<OrderModel> orders = [];
+    DocumentSnapshot? newLastDoc;
+
+    for (var doc in querySnapshot.docs) {
+      final order = OrderModel.fromFirestore(doc);
+      
+      // Check cache first
+      if (!_ordersCache.containsKey(order.orderCode)) {
+        // Fetch client data if not in cache
         ClientModel? client = await fetchClient(order.clientId);
         client ??= ClientModel(
           uid: '',
@@ -156,74 +217,125 @@ class OrdersCubit extends Cubit<OrdersState> {
           geoLocation: const GeoPoint(30.0444, 31.2357),
           category: '',
           government: '',
-          town: '', addressTyped: '',
+          town: '',
+          addressTyped: '',
         );
         order.client = client;
+        _ordersCache[order.orderCode.toString()] = order;
+      } else {
+        order.client = _ordersCache[order.orderCode]!.client;
+      }
+      
+      orders.add(order);
+      newLastDoc = doc;
+    }
 
-        switch (order.state) {
-          case 'جاري التاكيد':
-            ordersRecent.add(order);
+    return _PaginatedResult(
+      orders: orders,
+      hasMore: querySnapshot.docs.length == pageSize,
+      lastDoc: newLastDoc,
+    );
+  }
+
+  /// Calculate statistics for done and canceled orders
+  void _calculateStatistics(List<OrderModel> doneOrders, List<OrderModel> canceledOrders) {
+    // Calculate totals
+    ordersDoneTotal = doneOrders.fold(0, (sum, order) => sum + order.totalWithOffer);
+    ordersCanceledTotal = canceledOrders.fold(0, (sum, order) => sum + order.totalWithOffer);
+    
+    // Calculate canceled percentage
+    final totalOrders = doneOrders.length + canceledOrders.length;
+    canceledOrdersPercent = totalOrders > 0 
+        ? (canceledOrders.length / totalOrders) * 100 
+        : 0;
+
+    // Collect unique clients
+    clients.clear();
+    for (var order in doneOrders) {
+      if (order.client?.uid != null && !clients.contains(order.client!.uid)) {
+        clients.add(order.client!.uid);
+      }
+    }
+
+    // Calculate average delivery hours
+    double totalDeliveryHours = 0;
+    int deliveryCount = 0;
+    for (var order in doneOrders) {
+      if (order.doneAt != null) {
+        DateTime orderDate = order.date.toDate();
+        DateTime orderDoneAt = order.doneAt!.toDate();
+        double diffHours = orderDoneAt.difference(orderDate).inMinutes / 60.0;
+        totalDeliveryHours += diffHours;
+        deliveryCount++;
+      }
+    }
+    averageDeliveryHours = deliveryCount > 0 ? totalDeliveryHours / deliveryCount : 0;
+  }
+
+  /// Update order state
+  Future<void> updateState(String orderCode, String newState) async {
+    await db.collection('orders').doc(orderCode).update({
+      'state': newState,
+      'doneAt': newState == 'تم التوصيل' ? FieldValue.serverTimestamp() : null,
+    });
+
+    final currentState = state;
+    if (currentState is OrdersLoaded) {
+      // Find and update the order in the appropriate list
+      OrderModel? orderToMove;
+      List<OrderModel> updatedRecent = List.from(currentState.ordersRecent);
+      List<OrderModel> updatedPreparing = List.from(currentState.ordersPreparing);
+      List<OrderModel> updatedDone = List.from(currentState.ordersDone);
+      List<OrderModel> updatedCanceled = List.from(currentState.ordersCanceled);
+
+      // Find the order in current lists
+      for (var order in updatedRecent) {
+        if (order.orderCode == orderCode) {
+          orderToMove = order;
+          updatedRecent.remove(order);
+          break;
+        }
+      }
+      if (orderToMove == null) {
+        for (var order in updatedPreparing) {
+          if (order.orderCode == orderCode) {
+            orderToMove = order;
+            updatedPreparing.remove(order);
             break;
+          }
+        }
+      }
+
+      // Add to appropriate list based on new state
+      if (orderToMove != null) {
+        orderToMove.state = newState;
+        switch (newState) {
           case 'جاري التحضير':
-            ordersPreparing.add(order);
+            updatedPreparing.insert(0, orderToMove);
             break;
           case 'تم التوصيل':
-            ordersDone.add(order);
+            updatedDone.insert(0, orderToMove);
             break;
           case 'ملغي':
-            ordersCanceled.add(order);
+            updatedCanceled.insert(0, orderToMove);
             break;
         }
       }
 
-      // Calculate totals for ordersDone and ordersCanceled
-      ordersDoneTotal =
-          ordersDone.fold(0, (sum, order) => sum + order.totalWithOffer);
-      ordersCanceledTotal =
-          ordersCanceled.fold(0, (sum, order) => sum + order.totalWithOffer);
-      canceledOrdersPercent = (ordersCanceled.length /
-              (ordersDone.length + ordersCanceled.length)) *
-          100;
-
-      // Collect unique client ids from ordersDone
-      clients.clear();
-      for (var order in ordersDone) {
-        if (order.client?.uid != null && !clients.contains(order.client!.uid)) {
-          clients.add(order.client!.uid);
-        }
+      // Recalculate statistics if needed
+      if (newState == 'تم التوصيل' || newState == 'ملغي') {
+        _calculateStatistics(updatedDone, updatedCanceled);
       }
 
-      // Compute average delivery period (in hours) based on 'date' and 'doneAt'
-      double totalDeliveryHours = 0;
-      int deliveryCount = 0;
-      for (var order in ordersDone) {
-        if (order.doneAt != null) {
-          DateTime orderDate = order.date.toDate();
-          DateTime orderDoneAt = order.doneAt!.toDate();
-          double diffHours = orderDoneAt.difference(orderDate).inMinutes / 60.0;
-          totalDeliveryHours += diffHours;
-          deliveryCount++;
-        }
-      }
-      averageDeliveryHours =
-          deliveryCount > 0 ? totalDeliveryHours / deliveryCount : 0;
-
-      emit(OrdersLoaded(
-        ordersData,
-        ordersRecent,
-        ordersPreparing,
-        ordersDone,
-        ordersCanceled,
-        selectedProducts,
-        clients,
-        ordersDoneTotal,
-        ordersCanceledTotal,
-        averageDeliveryHours,
+      emit(currentState.copyWith(
+        ordersRecent: updatedRecent,
+        ordersPreparing: updatedPreparing,
+        ordersDone: updatedDone,
+        ordersCanceled: updatedCanceled,
+        ordersDoneTotal: ordersDoneTotal,
+        ordersCanceledTotal: ordersCanceledTotal,
+        averageDeliveryHours: averageDeliveryHours,
       ));
-      return ordersData;
-    } catch (e) {
-      emit(OrdersError());
-      return [];
     }
   }
 
@@ -243,27 +355,7 @@ class OrdersCubit extends Cubit<OrdersState> {
     }
   }
 
-  Future<void> updateState(String orderCode, String state) async {
-    await db.collection('orders').doc(orderCode).update({
-      'state': state,
-      'doneAt': FieldValue.serverTimestamp(),
-    });
-
-    emit(OrdersLoaded(
-      orders,
-      ordersRecent,
-      ordersPreparing,
-      ordersDone,
-      ordersCanceled,
-      selectedProducts,
-      clients,
-      ordersDoneTotal,
-      ordersCanceledTotal,
-      averageDeliveryHours,
-    ));
-  }
-
-  // Returns a list of TextEditingControllers based on the order's products.
+  // Keep your existing helper methods unchanged
   List<TextEditingController> controllersList(order) {
     controllers = List.generate(
       order.products.length,
@@ -273,22 +365,9 @@ class OrdersCubit extends Cubit<OrdersState> {
         return TextEditingController(text: controllerValue);
       },
     );
-    emit(OrdersLoaded(
-      orders,
-      ordersRecent,
-      ordersPreparing,
-      ordersDone,
-      ordersCanceled,
-      selectedProducts,
-      clients,
-      ordersDoneTotal,
-      ordersCanceledTotal,
-      averageDeliveryHours,
-    ));
     return controllers;
   }
 
-  // Initialize the product selection list for the order.
   List<bool> productSelection(order) {
     if (order.products == null || order.products.isEmpty) {
       return [];
@@ -299,38 +378,17 @@ class OrdersCubit extends Cubit<OrdersState> {
       (index) => true,
     );
 
-    emit(OrdersLoaded(
-      orders,
-      ordersRecent,
-      ordersPreparing,
-      ordersDone,
-      ordersCanceled,
-      selectedProducts,
-      clients,
-      ordersDoneTotal,
-      ordersCanceledTotal,
-      averageDeliveryHours,
-    ));
     return selectionList;
   }
 
   void updateProductSelection(int index, bool value) {
     selectionList[index] = value;
-    emit(OrdersLoaded(
-      orders,
-      ordersRecent,
-      ordersPreparing,
-      ordersDone,
-      ordersCanceled,
-      selectedProducts,
-      clients,
-      ordersDoneTotal,
-      ordersCanceledTotal,
-      averageDeliveryHours,
-    ));
+    final currentState = state;
+    if (currentState is OrdersLoaded) {
+      emit(currentState);
+    }
   }
 
-  // Helper function to compare controllers with stored product values.
   bool areControllersEqual(
       List<TextEditingController> controllers, List products) {
     for (int i = 0; i < controllers.length; i++) {
@@ -343,7 +401,6 @@ class OrdersCubit extends Cubit<OrdersState> {
     return true;
   }
 
-  // Updates product controllers if changes are detected.
   Future<void> updateProductControllers(List<TextEditingController> controllers,
       List products, String orderCode) async {
     if (areControllersEqual(controllers, products)) {
@@ -373,7 +430,6 @@ class OrdersCubit extends Cubit<OrdersState> {
     }
   }
 
-  // Initializes the list of selected products based on user selection.
   Future<void> initselectedProducts(List products, List<bool> selection,
       List selectedProducts, List<TextEditingController> controllers) async {
     selectedProducts.clear();
@@ -385,18 +441,22 @@ class OrdersCubit extends Cubit<OrdersState> {
       }
     }
 
-    emit(OrdersLoaded(
-      orders,
-      ordersRecent,
-      ordersPreparing,
-      ordersDone,
-      ordersCanceled,
-      selectedProducts,
-      clients,
-      ordersDoneTotal,
-      ordersCanceledTotal,
-      averageDeliveryHours,
-    ));
-    print('Selected products updated: $selectedProducts');
+    final currentState = state;
+    if (currentState is OrdersLoaded) {
+      emit(currentState);
+    }
   }
+}
+
+/// Helper class for paginated results
+class _PaginatedResult {
+  final List<OrderModel> orders;
+  final bool hasMore;
+  final DocumentSnapshot? lastDoc;
+
+  _PaginatedResult({
+    required this.orders,
+    required this.hasMore,
+    this.lastDoc,
+  });
 }

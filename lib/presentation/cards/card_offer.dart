@@ -26,15 +26,6 @@ class OfferCard extends StatefulWidget {
 }
 
 class _OfferCardState extends State<OfferCard> {
-  Map<String, dynamic> product = {};
-
-  @override
-  void initState() {
-    super.initState();
-    product.addAll(widget.product); // إضافة البيانات الديناميكية
-    product.addAll(widget.product); // إضافة البيانات الثابتة إن وجدت
-  }
-
   /// يعرض صورة المنتج مع التعامل مع حالات التحميل والأخطاء
   Widget _buildProductImage() {
     if (widget.product.containsKey('imageUrl')) {
@@ -45,8 +36,7 @@ class _OfferCardState extends State<OfferCard> {
           borderRadius: BorderRadius.circular(8.0),
           child: Image.network(
             widget.product['imageUrl'],
-                     fit: BoxFit.contain,
-
+            fit: BoxFit.contain,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
               return Center(
@@ -230,8 +220,8 @@ class _OfferCardState extends State<OfferCard> {
                         ),
                       ),
                     ),
-                    onPressed: () => _showEditSheet(
-                        context, widget.index, product, widget.productData),
+                    onPressed: () => _showEditSheet(context, widget.index,
+                        widget.product, widget.productData),
                     child: const Text(
                       'تعديل العرض',
                       style: TextStyle(

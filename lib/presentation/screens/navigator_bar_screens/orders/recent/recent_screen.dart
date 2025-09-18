@@ -16,12 +16,39 @@ class Recent extends StatefulWidget {
 
 class _RecentState extends State<Recent> {
   /// Flag to indicate sorting order.
-  /// When true: orders are sorted from recent (newest) to past (oldest)
-  /// When false: orders are sorted from oldest to newest.
   bool isRecentFirst = true;
+  
+  /// Scroll controller for detecting when to load more
+  final ScrollController _scrollController = ScrollController();
+  
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    // Initial load is handled by the parent widget or when cubit is created
+    // If not loaded yet, load initial data
+    if (context.read<OrdersCubit>().state is OrdersInitial) {
+      context.read<OrdersCubit>().fetchInitialOrders();
+    }
+  }
+  
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+  
+  void _onScroll() {
+    // Trigger load more when reaching 80% of the list
+    if (_scrollController.position.pixels >= 
+        _scrollController.position.maxScrollExtent * 0.8) {
+      context.read<OrdersCubit>().loadMoreRecentOrders();
+    }
+  }
 
   Future<void> _refreshOrders() async {
-    await context.read<OrdersCubit>().fetchOrders();
+    await context.read<OrdersCubit>().fetchInitialOrders();
   }
 
   @override
@@ -34,7 +61,6 @@ class _RecentState extends State<Recent> {
 
           if (sortedOrders.isNotEmpty) {
             sortedOrders.sort((a, b) {
-              // Assuming order.date is a DateTime object.
               return isRecentFirst
                   ? b.date.compareTo(a.date) 
                   : a.date.compareTo(b.date);  
@@ -42,7 +68,6 @@ class _RecentState extends State<Recent> {
           }
 
           return Column(
-           
             children: [
               _buildClassificationBar(),
               Expanded(
@@ -51,8 +76,36 @@ class _RecentState extends State<Recent> {
                   onRefresh: _refreshOrders,
                   child: sortedOrders.isNotEmpty
                       ? ListView.builder(
-                          itemCount: sortedOrders.length,
+                          controller: _scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: sortedOrders.length + 
+                              (state.isLoadingMoreRecent ? 1 : 0) +
+                              (!state.hasMoreRecent && sortedOrders.isNotEmpty ? 1 : 0),
                           itemBuilder: (BuildContext context, int index) {
+                            // Show loading indicator at the bottom
+                            if (index == sortedOrders.length) {
+                              if (state.isLoadingMoreRecent) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: primaryColor,
+                                    ),
+                                  ),
+                                );
+                              } else if (!state.hasMoreRecent) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: Text(
+                                      'تم عرض جميع الطلبات',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+
                             final order = sortedOrders[index];
                             final client = order.client;
 
@@ -77,8 +130,14 @@ class _RecentState extends State<Recent> {
                             );
                           },
                         )
-                      : const Center(
-                          child: Text('لا توجد طلبات حديثة'),
+                      : ListView(
+                          controller: _scrollController,
+                          children: const [
+                            SizedBox(height: 200),
+                            Center(
+                              child: Text('لا توجد طلبات حديثة'),
+                            ),
+                          ],
                         ),
                 ),
               ),
@@ -92,6 +151,22 @@ class _RecentState extends State<Recent> {
             itemBuilder: (context, index) {
               return const RecentOrdersCardSkeleton();
             },
+          );
+        }
+
+        if (state is OrdersError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('حدث خطأ في تحميل الطلبات'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.read<OrdersCubit>().fetchInitialOrders(),
+                  child: const Text('إعادة المحاولة'),
+                ),
+              ],
+            ),
           );
         }
 
@@ -130,14 +205,14 @@ class _RecentState extends State<Recent> {
                   Icons.arrow_upward,
                   color: isRecentFirst
                       ? Colors.grey
-                      : Colors.blue, // Highlight selected
+                      : Colors.blue,
                 ),
               ],
             ),
             onPressed: () {
               if (isRecentFirst) {
                 setState(() {
-                  isRecentFirst = false; // Sort from past to recent
+                  isRecentFirst = false;
                 });
               }
             },
@@ -159,7 +234,7 @@ class _RecentState extends State<Recent> {
             onPressed: () {
               if (!isRecentFirst) {
                 setState(() {
-                  isRecentFirst = true; // Sort from recent to past
+                  isRecentFirst = true;
                 });
               }
             },
@@ -173,13 +248,9 @@ class _RecentState extends State<Recent> {
 void startPreparing(BuildContext context, dynamic order) {
   final ordersCubit = BlocProvider.of<OrdersCubit>(context);
   ordersCubit.updateState(order.orderCode.toString(), 'جاري التحضير');
-  ordersCubit.ordersPreparing.add(order);
-  ordersCubit.ordersRecent.remove(order);
 }
 
 void cancel(BuildContext context, dynamic order) {
   final ordersCubit = BlocProvider.of<OrdersCubit>(context);
   ordersCubit.updateState(order.orderCode.toString(), 'ملغي');
-  ordersCubit.ordersCanceled.add(order);
-  ordersCubit.ordersRecent.remove(order);
 }

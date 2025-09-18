@@ -1,3 +1,5 @@
+
+// ============= Canceled Screen =============
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/business_logic/cubits/orders/orders_cubit.dart';
@@ -15,9 +17,30 @@ class Canceled extends StatefulWidget {
 
 class _CanceledState extends State<Canceled> {
   bool isRecentFirst = true;
+  final ScrollController _scrollController = ScrollController();
+  
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+  
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+  
+  void _onScroll() {
+    if (_scrollController.position.pixels >= 
+        _scrollController.position.maxScrollExtent * 0.8) {
+      context.read<OrdersCubit>().loadMoreCanceledOrders();
+    }
+  }
 
   Future<void> _refreshOrders() async {
-    await context.read<OrdersCubit>().fetchOrders();
+    await context.read<OrdersCubit>().fetchInitialOrders();
   }
 
   @override
@@ -36,10 +59,9 @@ class _CanceledState extends State<Canceled> {
         if (state is OrdersLoaded) {
           List canceledOrders = List.from(state.ordersCanceled);
 
-          // تطبيق الفرز
           canceledOrders.sort((a, b) => isRecentFirst
-                  ? b.date.compareTo(a.date) // الأحدث أولًا
-                  : a.date.compareTo(b.date) // الأقدم أولًا
+                  ? b.date.compareTo(a.date)
+                  : a.date.compareTo(b.date)
               );
 
           return Column(
@@ -51,8 +73,35 @@ class _CanceledState extends State<Canceled> {
                   onRefresh: _refreshOrders,
                   child: canceledOrders.isNotEmpty
                       ? ListView.builder(
-                          itemCount: canceledOrders.length,
+                          controller: _scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: canceledOrders.length + 
+                              (state.isLoadingMoreCanceled ? 1 : 0) +
+                              (!state.hasMoreCanceled && canceledOrders.isNotEmpty ? 1 : 0),
                           itemBuilder: (BuildContext context, int index) {
+                            if (index == canceledOrders.length) {
+                              if (state.isLoadingMoreCanceled) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: primaryColor,
+                                    ),
+                                  ),
+                                );
+                              } else if (!state.hasMoreCanceled) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: Text(
+                                      'تم عرض جميع الطلبات',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+
                             final order = canceledOrders[index];
                             final client = order.client;
 
@@ -64,10 +113,32 @@ class _CanceledState extends State<Canceled> {
                             );
                           },
                         )
-                      : const Center(child: Text('لا توجد طلبات ملغية')),
+                      : ListView(
+                          controller: _scrollController,
+                          children: const [
+                            SizedBox(height: 200),
+                            Center(child: Text('لا توجد طلبات ملغية')),
+                          ],
+                        ),
                 ),
               ),
             ],
+          );
+        }
+
+        if (state is OrdersError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('حدث خطأ في تحميل الطلبات'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.read<OrdersCubit>().fetchInitialOrders(),
+                  child: const Text('إعادة المحاولة'),
+                ),
+              ],
+            ),
           );
         }
 
@@ -76,7 +147,6 @@ class _CanceledState extends State<Canceled> {
     );
   }
 
-  /// شريط الفرز (⬆⬇)
   Widget _buildSortingBar() {
     return Container(
       height: 40,

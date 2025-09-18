@@ -17,12 +17,31 @@ class Preparing extends StatefulWidget {
 }
 
 class _PreparingState extends State<Preparing> {
-  /// Sorting flag: true = Newest First, false = Oldest First
   bool isRecentFirst = true;
+  final ScrollController _scrollController = ScrollController();
+  
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+  
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+  
+  void _onScroll() {
+    if (_scrollController.position.pixels >= 
+        _scrollController.position.maxScrollExtent * 0.8) {
+      context.read<OrdersCubit>().loadMorePreparingOrders();
+    }
+  }
 
-  /// Refresh orders by re-fetching them from Firestore
   Future<void> _refreshOrders() async {
-    await context.read<OrdersCubit>().fetchOrders();
+    await context.read<OrdersCubit>().fetchInitialOrders();
   }
 
   @override
@@ -32,10 +51,9 @@ class _PreparingState extends State<Preparing> {
         if (state is OrdersLoaded) {
           List preparingOrders = List.from(state.ordersPreparing);
 
-          // Sort orders based on the flag
           preparingOrders.sort((a, b) => isRecentFirst
-                  ? b.date.compareTo(a.date) // Newest First
-                  : a.date.compareTo(b.date) // Oldest First
+                  ? b.date.compareTo(a.date)
+                  : a.date.compareTo(b.date)
               );
 
           return Column(
@@ -47,8 +65,35 @@ class _PreparingState extends State<Preparing> {
                   onRefresh: _refreshOrders,
                   child: preparingOrders.isNotEmpty
                       ? ListView.builder(
-                          itemCount: preparingOrders.length,
+                          controller: _scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: preparingOrders.length + 
+                              (state.isLoadingMorePreparing ? 1 : 0) +
+                              (!state.hasMorePreparing && preparingOrders.isNotEmpty ? 1 : 0),
                           itemBuilder: (BuildContext context, int index) {
+                            if (index == preparingOrders.length) {
+                              if (state.isLoadingMorePreparing) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: primaryColor,
+                                    ),
+                                  ),
+                                );
+                              } else if (!state.hasMorePreparing) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: Text(
+                                      'تم عرض جميع الطلبات',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+
                             final order = preparingOrders[index];
                             final client = order.client;
 
@@ -73,7 +118,13 @@ class _PreparingState extends State<Preparing> {
                             );
                           },
                         )
-                      : const Center(child: Text('لا توجد طلبات جارٍ التحضير')),
+                      : ListView(
+                          controller: _scrollController,
+                          children: const [
+                            SizedBox(height: 200),
+                            Center(child: Text('لا توجد طلبات جارٍ التحضير')),
+                          ],
+                        ),
                 ),
               ),
             ],
@@ -83,13 +134,26 @@ class _PreparingState extends State<Preparing> {
             itemCount: 3,
             itemBuilder: (context, index) => const RecentOrdersCardSkeleton(),
           );
+        } else if (state is OrdersError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('حدث خطأ في تحميل الطلبات'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.read<OrdersCubit>().fetchInitialOrders(),
+                  child: const Text('إعادة المحاولة'),
+                ),
+              ],
+            ),
+          );
         }
         return const SizedBox();
       },
     );
   }
 
-  /// Sorting Bar Widget (⬆⬇)
   Widget _buildSortingBar() {
     return Container(
       height: 40,
@@ -123,7 +187,7 @@ class _PreparingState extends State<Preparing> {
             onPressed: () {
               if (isRecentFirst) {
                 setState(() {
-                  isRecentFirst = false; // Switch to Oldest First
+                  isRecentFirst = false;
                 });
               }
             },
@@ -141,7 +205,7 @@ class _PreparingState extends State<Preparing> {
             onPressed: () {
               if (!isRecentFirst) {
                 setState(() {
-                  isRecentFirst = true; // Switch to Newest First
+                  isRecentFirst = true;
                 });
               }
             },
@@ -152,17 +216,13 @@ class _PreparingState extends State<Preparing> {
   }
 }
 
-/// Called when an order is marked as done (delivered).
 void orderDone(BuildContext context, dynamic order) async {
   final ordersCubit = BlocProvider.of<OrdersCubit>(context);
-  List<String> Ids = [];
-  // Update the order state in Firestore.
   ordersCubit.updateState(order.orderCode.toString(), 'تم التوصيل');
-  ordersCubit.ordersDone.add(order);
-  ordersCubit.ordersPreparing.remove(order);
-
+  
   final currentOrder = order as OrderModel;
   final products = currentOrder.products;
+  List<String> Ids = [];
 
   for (var product in products) {
     final productId = product['product']['productId'];
@@ -172,12 +232,9 @@ void orderDone(BuildContext context, dynamic order) async {
   updateSaleCount(Ids);
 }
 
-/// Called when an order is cancelled.
 void cancel(BuildContext context, dynamic order) {
   final ordersCubit = BlocProvider.of<OrdersCubit>(context);
   ordersCubit.updateState(order.orderCode.toString(), 'ملغي');
-  ordersCubit.ordersCanceled.add(order);
-  ordersCubit.ordersPreparing.remove(order);
 }
 
 Future<void> updateSaleCount(List<String> ids) async {

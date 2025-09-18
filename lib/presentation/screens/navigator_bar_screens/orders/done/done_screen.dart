@@ -1,3 +1,4 @@
+// ============= Done Screen =============
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/business_logic/cubits/orders/orders_cubit.dart';
@@ -14,12 +15,31 @@ class Done extends StatefulWidget {
 }
 
 class _DoneState extends State<Done> {
-  /// ترتيب الطلبات: true = الأحدث أولاً، false = الأقدم أولاً
   bool isRecentFirst = true;
+  final ScrollController _scrollController = ScrollController();
+  
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+  
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+  
+  void _onScroll() {
+    if (_scrollController.position.pixels >= 
+        _scrollController.position.maxScrollExtent * 0.8) {
+      context.read<OrdersCubit>().loadMoreDoneOrders();
+    }
+  }
 
-  /// تحديث الطلبات عند السحب
   Future<void> _refreshOrders() async {
-    await context.read<OrdersCubit>().fetchOrders();
+    await context.read<OrdersCubit>().fetchInitialOrders();
   }
 
   @override
@@ -27,7 +47,6 @@ class _DoneState extends State<Done> {
     return BlocBuilder<OrdersCubit, OrdersState>(
       builder: (context, state) {
         if (state is OrdersLoading) {
-          // عرض Skeleton أثناء تحميل الطلبات
           return ListView.builder(
             itemCount: 3,
             itemBuilder: (context, index) {
@@ -39,10 +58,9 @@ class _DoneState extends State<Done> {
         if (state is OrdersLoaded) {
           List doneOrders = List.from(state.ordersDone);
 
-          // تطبيق الفرز
           doneOrders.sort((a, b) => isRecentFirst
-                  ? b.date.compareTo(a.date) // الأحدث أولًا
-                  : a.date.compareTo(b.date) // الأقدم أولًا
+                  ? b.date.compareTo(a.date)
+                  : a.date.compareTo(b.date)
               );
 
           return Column(
@@ -54,8 +72,35 @@ class _DoneState extends State<Done> {
                   onRefresh: _refreshOrders,
                   child: doneOrders.isNotEmpty
                       ? ListView.builder(
-                          itemCount: doneOrders.length,
+                          controller: _scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: doneOrders.length + 
+                              (state.isLoadingMoreDone ? 1 : 0) +
+                              (!state.hasMoreDone && doneOrders.isNotEmpty ? 1 : 0),
                           itemBuilder: (BuildContext context, int index) {
+                            if (index == doneOrders.length) {
+                              if (state.isLoadingMoreDone) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: primaryColor,
+                                    ),
+                                  ),
+                                );
+                              } else if (!state.hasMoreDone) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Center(
+                                    child: Text(
+                                      'تم عرض جميع الطلبات',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+
                             final order = doneOrders[index];
                             final client = order.client;
 
@@ -67,10 +112,32 @@ class _DoneState extends State<Done> {
                             );
                           },
                         )
-                      : const Center(child: Text('لا توجد طلبات مكتملة')),
+                      : ListView(
+                          controller: _scrollController,
+                          children: const [
+                            SizedBox(height: 200),
+                            Center(child: Text('لا توجد طلبات مكتملة')),
+                          ],
+                        ),
                 ),
               ),
             ],
+          );
+        }
+
+        if (state is OrdersError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('حدث خطأ في تحميل الطلبات'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.read<OrdersCubit>().fetchInitialOrders(),
+                  child: const Text('إعادة المحاولة'),
+                ),
+              ],
+            ),
           );
         }
 
@@ -79,7 +146,6 @@ class _DoneState extends State<Done> {
     );
   }
 
-  /// شريط الفرز (⬆⬇)
   Widget _buildSortingBar() {
     return Container(
       height: 40,

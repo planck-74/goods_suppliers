@@ -6,10 +6,8 @@ import 'package:goods/business_logic/cubits/search_main_store_cubit/search_main_
 import 'package:goods/data/global/theme/theme_data.dart';
 
 class SheetClassificationAvailable extends StatefulWidget {
-  // Callback function for when a classification is selected
   final Function(String filterType, String value)? onClassificationSelected;
 
-  // Current filter state to show which option is selected
   final String? currentFilterType;
   final String? currentFilterValue;
 

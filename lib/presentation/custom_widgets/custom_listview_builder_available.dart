@@ -64,8 +64,7 @@ class _AvailableProductsListState extends State<AvailableProductsList> {
           return AvailableCard(
             product: productData[index],
             storeId: widget.storeId,
-            index: index,
-            productData: productData,
+            
           );
         } else {
           return const Padding(

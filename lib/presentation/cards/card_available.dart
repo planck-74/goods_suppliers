@@ -9,17 +9,12 @@ import 'package:goods/presentation/sheets/sheet_available.dart';
 
 class AvailableCard extends StatefulWidget {
   final Map<String, dynamic>? product;
-
   final String storeId;
-  final int index;
-  final List productData;
 
   const AvailableCard({
     super.key,
     required this.product,
     required this.storeId,
-    required this.productData,
-    required this.index,
   });
 
   @override
@@ -27,15 +22,9 @@ class AvailableCard extends StatefulWidget {
 }
 
 class _AvailableCardState extends State<AvailableCard> {
-  Map<String, dynamic> product = {};
+ 
 
-  @override
-  void initState() {
-    super.initState();
-    if (widget.product != null) {
-      product.addAll(widget.product!);
-    }
-  }
+  
 
   Widget _buildProductImage() {
     if (widget.product != null && widget.product!.containsKey('imageUrl')) {
@@ -79,7 +68,6 @@ class _AvailableCardState extends State<AvailableCard> {
     }
   }
 
-  /// يعرض تفاصيل المنتج (الاسم مع الحجم والسعر وكميات الطلب)
   Widget _buildProductDetails(Map<String, dynamic>? product) {
     if (product == null) {
       return const Text('No product details available');
@@ -93,7 +81,7 @@ class _AvailableCardState extends State<AvailableCard> {
       children: [
         Text(
           title,
-          maxLines: 2, // Allows wrapping into a second line
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context)
               .textTheme
@@ -147,6 +135,18 @@ class _AvailableCardState extends State<AvailableCard> {
   }
 
   void _handleUnavailable(BuildContext context) {
+    // Ensure we have a valid productId before proceeding
+    final productId = widget.product?['productId'];
+    if (productId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('خطأ: معرف المنتج غير موجود'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -177,11 +177,14 @@ class _AvailableCardState extends State<AvailableCard> {
                         .markProductAsUnavailable(
                           context,
                           widget.storeId,
-                          widget.product!['productId'],
+                          productId, // Use the productId directly
                         );
+
+                    // Use the productId-based removal method
                     context
                         .read<AvailableCubit>()
-                        .eliminateProduct(index: widget.index);
+                        .removeProductLocally(productId);
+
                     Navigator.of(context).pop(true);
                   },
                   child: state is DynamicProductLoading
@@ -233,7 +236,6 @@ class _AvailableCardState extends State<AvailableCard> {
                         color: darkBlueColor,
                       ),
                       const SizedBox(width: 6),
-                      // Wrap product details with Expanded to allow text wrapping
                       Expanded(
                         child: _buildProductDetails(widget.product),
                       ),
@@ -254,7 +256,9 @@ class _AvailableCardState extends State<AvailableCard> {
                           ),
                         ),
                         onPressed: () => _showSheet(
-                            context, widget.index, product, widget.productData),
+                          context,
+                           widget.product ?? {}, 
+                        ),
                         child: const Text(
                           '  تعديل',
                           style: TextStyle(
@@ -286,7 +290,7 @@ class _AvailableCardState extends State<AvailableCard> {
                 ),
               ],
             ),
-            if (product.containsKey('isOnSale') && product['isOnSale'] == true)
+            if (widget.product!.containsKey('isOnSale') && widget.product?['isOnSale'] == true)
               Positioned(
                 right: 0,
                 top: 0,
@@ -317,17 +321,26 @@ class _AvailableCardState extends State<AvailableCard> {
   }
 }
 
-void _showSheet(BuildContext context, int index, Map<String, dynamic> product,
-    List productData) {
+// Updated to not require index and productData
+void _showSheet(BuildContext context, Map<String, dynamic> product) {
+  // Validate that product has required ID
+  if (product['productId'] == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('خطأ: معرف المنتج غير موجود'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
   showModalBottomSheet(
     backgroundColor: whiteColor,
     context: context,
     isScrollControlled: true,
     builder: (BuildContext context) {
       return SheetAvailable(
-        index: index,
         product: product,
-        productData: productData,
       );
     },
   );

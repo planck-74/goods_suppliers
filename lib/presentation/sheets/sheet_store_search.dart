@@ -661,8 +661,7 @@ class StoreSearchSheetState extends State<StoreSearchSheet> {
       return AvailableCard(
         product: product,
         storeId: storeId,
-        productData: const [],
-        index: index,
+       
       );
     } else if (_currentTabIndex == 2) {
       return unAvailableCard(

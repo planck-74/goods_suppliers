@@ -7,7 +7,6 @@ import 'package:goods/presentation/custom_widgets/custom_listview_builder_availa
 import 'package:goods/presentation/sheets/sheet_classification_available.dart';
 import 'package:goods/presentation/skeletons/available_card_skeleton.dart';
 
-
 class Available extends StatefulWidget {
   const Available({super.key});
 
@@ -19,52 +18,40 @@ class _AvailableState extends State<Available> {
   // Track current filter state for this tab
   String? _currentFilterType;
   String? _currentFilterValue;
-  
+
   @override
   void initState() {
     super.initState();
-    // Load available products using the search cubit's existing data
-    // Tab index 1 represents the Available products tab
+
     _loadAvailableProducts();
   }
 
-  /// Load available products from the search cubit
-  /// This method leverages the already-fetched data instead of making new requests
   void _loadAvailableProducts() {
     final searchCubit = context.read<SearchMainStoreCubit>();
-    
-    // Check if data is already loaded in the search cubit
+
     if (searchCubit.isDataLoaded) {
-      // Data is available, get available products (tab index 1)
       searchCubit.getProductsByTabType(1);
     } else {
-      // Data not loaded yet, fetch all products first
-      // This should typically be done in your splash screen or main store screen
       searchCubit.fetchAllStoreProducts(storeId);
     }
   }
 
- 
   void _applyClassificationFilter(String filterType, String value) {
-    
-    // Store current filter state for reset functionality
     _currentFilterType = filterType;
     _currentFilterValue = value;
-    
- 
+
     context.read<SearchMainStoreCubit>().filterProductsByClassification(
-      filterType: filterType,
-      filterValue: value,
-      tabType: 1, // Available products tab
-    );
+          filterType: filterType,
+          filterValue: value,
+          tabType: 1, // Available products tab
+        );
   }
- 
+
   void _clearAllFilters() {
-    
     // Clear filter state
     _currentFilterType = null;
     _currentFilterValue = null;
-    
+
     // Get all available products without any filters
     context.read<SearchMainStoreCubit>().getProductsByTabType(1);
   }
@@ -74,17 +61,16 @@ class _AvailableState extends State<Available> {
   void _onClassificationSelected(String filterType, String value) {
     // Apply the selected filter
     _applyClassificationFilter(filterType, value);
-    
+
     // Close the classification sheet automatically
     Navigator.of(context).pop();
   }
 
   /// Handle refresh action - reload data from Firebase
   Future<void> _refreshData() async {
-    
     // Refresh all data in search cubit
     await context.read<SearchMainStoreCubit>().refreshProductsData(storeId);
-    
+
     // Reapply current filter if one exists, otherwise show all available products
     if (_currentFilterType != null && _currentFilterValue != null) {
       _applyClassificationFilter(_currentFilterType!, _currentFilterValue!);
@@ -135,19 +121,19 @@ class _AvailableState extends State<Available> {
                             const SizedBox(width: 5),
                             // Show indicator if filter is applied
                             Icon(
-                              _currentFilterType != null 
-                                ? Icons.filter_alt 
-                                : Icons.filter_alt_outlined,
+                              _currentFilterType != null
+                                  ? Icons.filter_alt
+                                  : Icons.filter_alt_outlined,
                               size: 12,
-                              color: _currentFilterType != null 
-                                ? Colors.orange 
-                                : primaryColor,
+                              color: _currentFilterType != null
+                                  ? Colors.orange
+                                  : primaryColor,
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(width: 6),
-                      
+
                       // Reset button - shows applied filter count
                       customOutlinedButton(
                         onPressed: _clearAllFilters,
@@ -160,15 +146,16 @@ class _AvailableState extends State<Available> {
                           children: [
                             Icon(
                               Icons.restart_alt,
-                              color: _currentFilterType != null 
-                                ? Colors.orange 
-                                : primaryColor,
+                              color: _currentFilterType != null
+                                  ? Colors.orange
+                                  : primaryColor,
                               size: 16,
                             ),
                             if (_currentFilterType != null) ...[
                               const SizedBox(width: 4),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 4, vertical: 1),
                                 decoration: BoxDecoration(
                                   color: Colors.orange,
                                   borderRadius: BorderRadius.circular(8),
@@ -192,7 +179,7 @@ class _AvailableState extends State<Available> {
               ],
             ),
           ),
-          
+
           // Show current filter info if applied
           if (_currentFilterType != null && _currentFilterValue != null)
             Container(
@@ -229,10 +216,10 @@ class _AvailableState extends State<Available> {
                 ],
               ),
             ),
-          
+
           const SizedBox(height: 6),
-          
-          // Main content area - using SearchMainStoreCubit instead of AvailableCubit
+
+         
           Expanded(
             child: RefreshIndicator(
               color: primaryColor,
@@ -243,16 +230,16 @@ class _AvailableState extends State<Available> {
                   if (state is SearchMainStoreLoading) {
                     return const AvailableCardSkeletonList();
                   }
-                  
+
                   // Handle loaded state
                   else if (state is SearchMainStoreLoaded) {
                     final availableProducts = state.products;
-                    
+
                     // Show empty state if no products found
                     if (availableProducts.isEmpty) {
                       return _buildEmptyState();
                     }
-                    
+
                     // Show products list
                     return AvailableProductsList(
                       data: availableProducts,
@@ -260,23 +247,23 @@ class _AvailableState extends State<Available> {
                       isLoadingMore: false, // No pagination needed
                     );
                   }
-                  
+
                   // Handle error state
                   else if (state is SearchMainStoreError) {
                     return _buildErrorState(state.message);
                   }
-                  
+
                   // Handle initial state - show message or load data
                   else if (state is SearchMainStoreInitial) {
                     final searchCubit = context.read<SearchMainStoreCubit>();
                     if (!searchCubit.isDataLoaded) {
                       return _buildDataNotLoadedState();
                     }
-                    
+
                     // Data is loaded but no action taken yet
                     return _buildInitialState();
                   }
-                  
+
                   // Default fallback
                   return _buildInitialState();
                 },
@@ -296,13 +283,12 @@ class _AvailableState extends State<Available> {
       isScrollControlled: true,
       builder: (BuildContext context) {
         return SheetClassificationAvailable(
-onClassificationSelected: _onClassificationSelected,
-        // Pass current filter state to show selected options
-        currentFilterType: _currentFilterType,
-        currentFilterValue: _currentFilterValue,
-        // Pass the tab type (1 for Available products)
-        tabType: 1,
-
+          onClassificationSelected: _onClassificationSelected,
+          // Pass current filter state to show selected options
+          currentFilterType: _currentFilterType,
+          currentFilterValue: _currentFilterValue,
+          // Pass the tab type (1 for Available products)
+          tabType: 1,
         );
       },
     );
@@ -315,17 +301,17 @@ onClassificationSelected: _onClassificationSelected,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            _currentFilterType != null 
-              ? Icons.filter_alt_off 
-              : Icons.inventory_2_outlined,
+            _currentFilterType != null
+                ? Icons.filter_alt_off
+                : Icons.inventory_2_outlined,
             size: 64,
             color: Colors.grey.shade400,
           ),
           const SizedBox(height: 16),
           Text(
-            _currentFilterType != null 
-              ? 'لا توجد منتجات تطابق الفلتر المحدد'
-              : 'لا توجد منتجات متاحة',
+            _currentFilterType != null
+                ? 'لا توجد منتجات تطابق الفلتر المحدد'
+                : 'لا توجد منتجات متاحة',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,

@@ -18,14 +18,17 @@ class Orders extends StatefulWidget {
 
 class _ordersState extends State<Orders> {
   @override
-  @override
   void initState() {
     super.initState();
-    _loadOrders();
+    _loadInitialOrders();
   }
 
-  void _loadOrders() async {
-    await context.read<OrdersCubit>().fetchOrders();
+  void _loadInitialOrders() async {
+    // Only fetch if not already loaded
+    final currentState = context.read<OrdersCubit>().state;
+    if (currentState is! OrdersLoaded) {
+      await context.read<OrdersCubit>().fetchInitialOrders();
+    }
   }
 
   @override
@@ -70,7 +73,7 @@ class _ordersState extends State<Orders> {
                                 builder: (context, state) {
                                   if (state is OrdersLoaded) {
                                     return Text(
-                                      '${context.read<OrdersCubit>().ordersRecent.length}',
+                                      '${state.ordersRecent.length}',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 12,
@@ -78,15 +81,51 @@ class _ordersState extends State<Orders> {
                                       ),
                                     );
                                   }
-                                  return const SizedBox();
+                                  return const Text(
+                                    '0',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  );
                                 },
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const Tab(
-                        child: Text('جارٍ التحضير'),
+                      Tab(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('جارٍ التحضير'),
+                            const SizedBox(width: 6),
+                            BlocBuilder<OrdersCubit, OrdersState>(
+                              builder: (context, state) {
+                                if (state is OrdersLoaded && state.ordersPreparing.isNotEmpty) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      '${state.ordersPreparing.length}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox();
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                       const Tab(
                         child: Text('تم التوصيل'),

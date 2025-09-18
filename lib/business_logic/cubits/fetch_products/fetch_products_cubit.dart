@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:goods/business_logic/cubits/fetch_products/fetch_products_state.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/data/models/product_model.dart';
-import 'package:goods/presentation/custom_widgets/snack_bar_errors.dart';
 
 class ProductsCubit extends Cubit<ProductsState> {
   ProductsCubit() : super(ProductsInitial());

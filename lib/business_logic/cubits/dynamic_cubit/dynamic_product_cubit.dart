@@ -144,7 +144,6 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
 
   Future<void> syncStoreProducts(BuildContext context, String storeId) async {
     try {
-
       emit(DynamicProductLoading());
 
       final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -156,7 +155,6 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
           .collection('products')
           .get();
 
-
       WriteBatch batch = firestore.batch();
       int updatedCount = 0;
 
@@ -164,7 +162,6 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
       for (var storeDoc in storeProductsSnapshot.docs) {
         final storeProduct = storeDoc.data();
         final productId = storeProduct['productId'];
-
 
         // Get corresponding main product
         final mainProductDoc =
@@ -187,8 +184,7 @@ class DynamicProductCubit extends Cubit<DynamicProductState> {
 
           batch.update(storeDoc.reference, updatedData);
           updatedCount++;
-        } else {
-        }
+        } else {}
       }
 
       // Commit all updates
