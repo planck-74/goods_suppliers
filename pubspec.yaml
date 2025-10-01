@@ -126,6 +126,6 @@ flutter_launcher_icons:
 
 flutter_native_splash:
   color: "#000000" # Black color
-  image: assets/images/screen.jpg
+  image: assets/images/admin_splash.png
   android: true
   ios: false
