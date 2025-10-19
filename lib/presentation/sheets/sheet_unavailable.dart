@@ -575,13 +575,12 @@ class _SheetUnavailableState extends State<SheetUnavailable>
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              color: Colors.grey[100],
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.grey[200]!, width: 2),
               image: widget.product['imageUrl'] != null
                   ? DecorationImage(
                       image: NetworkImage(widget.product['imageUrl']),
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain,
                     )
                   : null,
             ),
@@ -846,7 +845,6 @@ class _SheetUnavailableState extends State<SheetUnavailable>
             const SizedBox(height: 16),
             _buildOfferPriceSection(),
             const SizedBox(height: 12),
-           
           ],
         ),
       ),

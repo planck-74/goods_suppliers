@@ -22,7 +22,6 @@ class StoreSearchSheetState extends State<StoreSearchSheet> {
   late int _currentTabIndex;
   Timer? _debounceTimer;
 
-  // Bulk edit functionality
   bool _isBulkEditMode = false;
   final Set<String> _selectedProductIds = {};
   List<Map<String, dynamic>> _allProducts = [];
@@ -33,17 +32,14 @@ class StoreSearchSheetState extends State<StoreSearchSheet> {
     _currentTabIndex = widget.selectedTabIndexNotifier.value;
     widget.selectedTabIndexNotifier.addListener(_onTabChanged);
 
-    // Load initial products for the current tab
     _loadInitialProducts();
   }
 
   void _loadInitialProducts() {
     final cubit = context.read<SearchMainStoreCubit>();
     if (cubit.isDataLoaded) {
-      // If data is already loaded, perform search (which will show all products if query is empty)
       _performSearch();
     } else {
-      // If data is not loaded, show error message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('البيانات غير محملة. يرجى إعادة تشغيل التطبيق.'),
@@ -71,7 +67,7 @@ class StoreSearchSheetState extends State<StoreSearchSheet> {
           _searchQuery,
           _currentTabIndex,
           storeId:
-              storeId, // This parameter is optional now but kept for compatibility
+              storeId,  
         );
   }
 
@@ -83,7 +79,6 @@ class StoreSearchSheetState extends State<StoreSearchSheet> {
     // Cancel previous timer
     _debounceTimer?.cancel();
 
-    // Search with the new query (empty query will show all products for the tab)
     _debounceTimer = Timer(const Duration(milliseconds: 300), () {
       if (mounted) {
         _performSearch();
@@ -701,6 +696,8 @@ class _BulkEditDialogState extends State<BulkEditDialog> {
   bool _updateOfferPrice = false;
   bool _updateMinOrder = false;
   bool _updateMaxOrder = false;
+  bool _updateAvailability = false;
+  bool _availabilityValue = true; // Default to available
   bool _isLoading = false;
 
   @override
@@ -716,7 +713,8 @@ class _BulkEditDialogState extends State<BulkEditDialog> {
     if (!_updatePrice &&
         !_updateOfferPrice &&
         !_updateMinOrder &&
-        !_updateMaxOrder) {
+        !_updateMaxOrder &&
+        !_updateAvailability) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('يرجى اختيار حقل واحد على الأقل للتعديل')),
       );
@@ -755,6 +753,10 @@ class _BulkEditDialogState extends State<BulkEditDialog> {
         if (_updateMaxOrder && _maxOrderController.text.isNotEmpty) {
           updates['maxOrderQuantity'] =
               int.tryParse(_maxOrderController.text) ?? 100;
+        }
+
+        if (_updateAvailability) {
+          updates['availability'] = _availabilityValue;
         }
 
         if (updates.isNotEmpty) {
@@ -800,6 +802,70 @@ class _BulkEditDialogState extends State<BulkEditDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Availability Status
+            CheckboxListTile(
+              title: const Text('حالة التوفر'),
+              value: _updateAvailability,
+              onChanged: (value) {
+                setState(() {
+                  _updateAvailability = value ?? false;
+                });
+              },
+            ),
+            if (_updateAvailability)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _availabilityValue 
+                      ? Colors.green.shade50 
+                      : Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _availabilityValue 
+                        ? Colors.green.shade200 
+                        : Colors.red.shade200,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _availabilityValue 
+                          ? Icons.check_circle_outline 
+                          : Icons.cancel_outlined,
+                      color: _availabilityValue 
+                          ? Colors.green.shade700 
+                          : Colors.red.shade700,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _availabilityValue ? 'متاح' : 'غير متاح',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: _availabilityValue 
+                              ? Colors.green.shade700 
+                              : Colors.red.shade700,
+                        ),
+                      ),
+                    ),
+                    Switch(
+                      value: _availabilityValue,
+                      onChanged: (value) {
+                        setState(() {
+                          _availabilityValue = value;
+                        });
+                      },
+                      activeColor: Colors.green,
+                      inactiveThumbColor: Colors.red,
+                    ),
+                  ],
+                ),
+              ),
+
+            const Divider(height: 24),
+
             // Price
             CheckboxListTile(
               title: const Text('السعر'),
@@ -811,12 +877,16 @@ class _BulkEditDialogState extends State<BulkEditDialog> {
               },
             ),
             if (_updatePrice)
-              TextField(
-                controller: _priceController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'السعر الجديد',
-                  suffixText: 'جـ',
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _priceController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'السعر الجديد',
+                    suffixText: 'جـ',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ),
 
@@ -834,12 +904,16 @@ class _BulkEditDialogState extends State<BulkEditDialog> {
                 },
               ),
               if (_updateOfferPrice)
-                TextField(
-                  controller: _offerPriceController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'سعر العرض الجديد',
-                    suffixText: 'جـ',
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    controller: _offerPriceController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'سعر العرض الجديد',
+                      suffixText: 'جـ',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
               const SizedBox(height: 16),
@@ -856,11 +930,15 @@ class _BulkEditDialogState extends State<BulkEditDialog> {
               },
             ),
             if (_updateMinOrder)
-              TextField(
-                controller: _minOrderController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'أقل كمية للطلب',
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _minOrderController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'أقل كمية للطلب',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ),
 
@@ -877,11 +955,15 @@ class _BulkEditDialogState extends State<BulkEditDialog> {
               },
             ),
             if (_updateMaxOrder)
-              TextField(
-                controller: _maxOrderController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'أقصى كمية للطلب',
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _maxOrderController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'أقصى كمية للطلب',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ),
           ],
