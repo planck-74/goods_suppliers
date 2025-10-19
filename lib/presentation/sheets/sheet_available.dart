@@ -32,8 +32,10 @@ class _SheetAvailableState extends State<SheetAvailable>
   // Animation controllers
   late AnimationController _slideController;
   late AnimationController _fadeController;
+  late AnimationController _shakeController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
+  late Animation<double> _shakeAnimation;
 
   // Form key for validation
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -53,7 +55,6 @@ class _SheetAvailableState extends State<SheetAvailable>
     _addListeners();
     _validateForm();
 
-    // Initialize checkBoxState based on current product state
     checkBoxState = widget.product['isOnSale'] ?? false;
     if (widget.product['endDate'] != null &&
         widget.product['endDate'] is DateTime) {
@@ -68,6 +69,10 @@ class _SheetAvailableState extends State<SheetAvailable>
     );
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _shakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
       vsync: this,
     );
 
@@ -87,7 +92,14 @@ class _SheetAvailableState extends State<SheetAvailable>
       curve: Curves.easeIn,
     ));
 
-    // Start animations
+    _shakeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _shakeController,
+      curve: Curves.elasticIn,
+    ));
+
     _slideController.forward();
     _fadeController.forward();
   }
@@ -114,8 +126,72 @@ class _SheetAvailableState extends State<SheetAvailable>
     priceController.addListener(_validateForm);
     minQuantityController.addListener(_validateForm);
     maxQuantityController.addListener(_validateForm);
-    offerPriceController.addListener(_validateForm);
-    maxQuantityControllerOffer.addListener(_validateForm);
+    offerPriceController.addListener(() {
+      _validateOfferPrice();
+      _validateForm();
+    });
+    maxQuantityControllerOffer.addListener(() {
+      _validateOfferQuantity();
+      _validateForm();
+    });
+  }
+
+  void _validateOfferPrice() {
+    if (offerPriceController.text.isEmpty || priceController.text.isEmpty) {
+      return;
+    }
+
+    final offerPrice = double.tryParse(offerPriceController.text);
+    final mainPrice = double.tryParse(priceController.text);
+
+    if (offerPrice != null && mainPrice != null && offerPrice >= mainPrice) {
+      _showTopWarning('سعر العرض يجب أن يكون أقل من السعر الأساسي');
+      _triggerShake();
+
+      // Auto-correct to be slightly less than main price
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          final correctedPrice = (mainPrice - 1).toInt();
+          offerPriceController.text =
+              correctedPrice > 0 ? correctedPrice.toString() : '1';
+        }
+      });
+    }
+  }
+
+  void _validateOfferQuantity() {
+    if (maxQuantityControllerOffer.text.isEmpty ||
+        maxQuantityController.text.isEmpty) {
+      return;
+    }
+
+    final offerMaxQty = int.tryParse(maxQuantityControllerOffer.text);
+    final mainMaxQty = int.tryParse(maxQuantityController.text);
+
+    if (offerMaxQty != null && mainMaxQty != null && offerMaxQty > mainMaxQty) {
+      _showTopWarning(
+          'الحد الأقصى لكمية العرض يجب أن لا يتجاوز الحد الأقصى للكمية الأساسية');
+      _triggerShake();
+
+      // Auto-correct to match main max quantity
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          maxQuantityControllerOffer.text = mainMaxQty.toString();
+        }
+      });
+    }
+  }
+
+  void _triggerShake() {
+    _shakeController.reset();
+    _shakeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 10.0,
+    ).animate(CurvedAnimation(
+      parent: _shakeController,
+      curve: Curves.elasticIn,
+    ));
+    _shakeController.forward();
   }
 
   void _validateForm() {
@@ -139,11 +215,108 @@ class _SheetAvailableState extends State<SheetAvailable>
               double.tryParse(offerPriceController.text) != null &&
               int.tryParse(maxQuantityControllerOffer.text) != null &&
               double.parse(offerPriceController.text) > 0 &&
+              double.parse(offerPriceController.text) <
+                  double.parse(priceController.text) &&
               int.parse(maxQuantityControllerOffer.text) > 0 &&
+              int.parse(maxQuantityControllerOffer.text) <=
+                  int.parse(maxQuantityController.text) &&
               selectedDate != null &&
               selectedDate!.isAfter(DateTime.now()));
 
       _isFormValid = hasValidPrice && hasValidQuantities && offerValid;
+    });
+  }
+
+  void _showTopWarning(String message) {
+    // Use overlay instead of ScaffoldMessenger for sheets/dialogs
+    final overlay = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 300),
+            builder: (context, value, child) {
+              return Transform.translate(
+                offset: Offset(0, -50 * (1 - value)),
+                child: Opacity(
+                  opacity: value,
+                  child: child,
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.amber[700],
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded,
+                      color: Colors.white, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () {
+                      overlayEntry.remove();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'حسناً',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(overlayEntry);
+    HapticFeedback.mediumImpact();
+
+    // Auto remove after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      if (overlayEntry.mounted) {
+        overlayEntry.remove();
+      }
     });
   }
 
@@ -156,8 +329,8 @@ class _SheetAvailableState extends State<SheetAvailable>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.red,
+            colorScheme: ColorScheme.light(
+              primary: Colors.red[600]!,
               onPrimary: Colors.white,
               onSurface: Colors.black,
             ),
@@ -173,16 +346,78 @@ class _SheetAvailableState extends State<SheetAvailable>
       });
       _validateForm();
 
-      // Show success feedback
       HapticFeedback.selectionClick();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('تم تحديد تاريخ انتهاء العرض: ${_formatDate(picked)}'),
-          duration: const Duration(seconds: 2),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _showSuccessOverlay(
+          'تم تحديد تاريخ انتهاء العرض: ${_formatDate(picked)}');
     }
+  }
+
+  void _showSuccessOverlay(String message) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 300),
+            builder: (context, value, child) {
+              return Transform.translate(
+                offset: Offset(0, -50 * (1 - value)),
+                child: Opacity(
+                  opacity: value,
+                  child: child,
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green[600],
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(overlayEntry);
+
+    // Auto remove after 2 seconds
+    Future.delayed(const Duration(seconds: 2), () {
+      if (overlayEntry.mounted) {
+        overlayEntry.remove();
+      }
+    });
   }
 
   String _formatDate(DateTime date) {
@@ -190,39 +425,131 @@ class _SheetAvailableState extends State<SheetAvailable>
   }
 
   void _showValidationError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-        action: SnackBarAction(
-          label: 'موافق',
-          textColor: Colors.white,
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
+    final overlay = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 300),
+            builder: (context, value, child) {
+              return Transform.translate(
+                offset: Offset(0, -50 * (1 - value)),
+                child: Opacity(
+                  opacity: value,
+                  child: child,
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red[600],
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.error_outline,
+                      color: Colors.white, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () {
+                      overlayEntry.remove();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'موافق',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
+
+    overlay.insert(overlayEntry);
+
+    // Auto remove after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      if (overlayEntry.mounted) {
+        overlayEntry.remove();
+      }
+    });
   }
 
   Future<void> _handleSubmit() async {
     if (!_isFormValid) {
       _showValidationError('يرجى التأكد من صحة جميع البيانات المدخلة');
+      _triggerShake();
       return;
     }
 
-   
     final productId = widget.product['productId'];
     if (productId == null) {
       _showValidationError('خطأ: معرف المنتج غير موجود');
       return;
     }
 
+    // Additional validation before submission
+    if (checkBoxState) {
+      final offerPrice = double.parse(offerPriceController.text);
+      final mainPrice = double.parse(priceController.text);
+      final offerMaxQty = int.parse(maxQuantityControllerOffer.text);
+      final mainMaxQty = int.parse(maxQuantityController.text);
+
+      if (offerPrice >= mainPrice) {
+        _showTopWarning('سعر العرض يجب أن يكون أقل من السعر الأساسي');
+        return;
+      }
+
+      if (offerMaxQty > mainMaxQty) {
+        _showTopWarning(
+            'الحد الأقصى لكمية العرض يجب أن لا يتجاوز الحد الأقصى للكمية الأساسية');
+        return;
+      }
+    }
+
     HapticFeedback.heavyImpact();
 
     try {
-      // Prepare updated product data
       final updatedData = {
         'availability': isAvailable,
         'price': int.parse(priceController.text),
@@ -236,7 +563,6 @@ class _SheetAvailableState extends State<SheetAvailable>
         'isOnSale': checkBoxState,
       };
 
-      // Create product model for the dynamic cubit
       final product = Product(
         productId: productId,
         availability: isAvailable,
@@ -258,7 +584,6 @@ class _SheetAvailableState extends State<SheetAvailable>
         salesCount: widget.product['salesCount'],
       );
 
-      // Update product in Firebase
       await context.read<DynamicProductCubit>().addDynamicProduct(
             context,
             product,
@@ -268,13 +593,11 @@ class _SheetAvailableState extends State<SheetAvailable>
                 : 'تم تحديث المنتج بنجاح',
           );
 
-      // Update local data in the available cubit
       context.read<AvailableCubit>().updateProductLocally(
             productId,
             updatedData,
           );
 
-      // Success feedback
       HapticFeedback.heavyImpact();
 
       await Future.delayed(const Duration(milliseconds: 500));
@@ -292,6 +615,7 @@ class _SheetAvailableState extends State<SheetAvailable>
   void dispose() {
     _slideController.dispose();
     _fadeController.dispose();
+    _shakeController.dispose();
     priceController.dispose();
     minQuantityController.dispose();
     maxQuantityController.dispose();
@@ -341,6 +665,7 @@ class _SheetAvailableState extends State<SheetAvailable>
                   ),
                   _buildDivider(),
                   _buildBottomActions(),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -351,15 +676,16 @@ class _SheetAvailableState extends State<SheetAvailable>
   }
 
   Widget _buildHeader() {
-    return Container(
-      height: 4,
-      width: 50,
-      margin: const EdgeInsets.only(top: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[300],
-        borderRadius: BorderRadius.circular(2),
+    return Center(
+      child: Container(
+        height: 4,
+        width: 50,
+        margin: const EdgeInsets.only(top: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(2),
+        ),
       ),
-      alignment: Alignment.center,
     );
   }
 
@@ -367,30 +693,46 @@ class _SheetAvailableState extends State<SheetAvailable>
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: [Colors.grey[50]!, Colors.white],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        ),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
-              image: widget.product['imageUrl'] != null
-                  ? DecorationImage(
-                      image: NetworkImage(widget.product['imageUrl']),
-                      fit: BoxFit.cover,
-                    )
+          Hero(
+            tag: 'product_${widget.product['productId']}',
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[200]!, width: 2),
+                image: widget.product['imageUrl'] != null
+                    ? DecorationImage(
+                        image: NetworkImage(widget.product['imageUrl']),
+                        fit: BoxFit.contain,
+                      )
+                    : null,
+              ),
+              child: widget.product['imageUrl'] == null
+                  ? Icon(Icons.inventory_2_outlined,
+                      color: Colors.grey[400], size: 32)
                   : null,
             ),
-            child: widget.product['imageUrl'] == null
-                ? const Icon(Icons.inventory, color: Colors.grey)
-                : null,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,29 +740,51 @@ class _SheetAvailableState extends State<SheetAvailable>
                 Text(
                   widget.product['name'] ?? 'اسم المنتج غير متوفر',
                   style: const TextStyle(
-                    color: Colors.black,
+                    color: Colors.black87,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 if (widget.product['size'] != null)
-                  Text(
-                    'الحجم: ${widget.product['size']}',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  Row(
+                    children: [
+                      Icon(Icons.straighten, size: 14, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        widget.product['size'],
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 if (widget.product['manufacturer'] != null)
-                  Text(
-                    'الشركة المصنعة: ${widget.product['manufacturer']}',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.business, size: 14, color: Colors.grey[600]),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            widget.product['manufacturer'],
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                // Show Product ID for debugging (can be removed in production)
-                Text(
-                  'ID: ${widget.product['productId'] ?? 'غير محدد'}',
-                  style: TextStyle(color: Colors.grey[400], fontSize: 10),
-                ),
               ],
             ),
           ),
@@ -434,27 +798,55 @@ class _SheetAvailableState extends State<SheetAvailable>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.blue.withOpacity(0.05),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: PriceQuantitySection(
-        priceController: priceController,
-        maxQuantityController: maxQuantityController,
-        minQuantityController: minQuantityController,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.attach_money, color: Colors.blue[700], size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'تفاصيل السعر والكمية',
+                style: TextStyle(
+                  color: Colors.blue[700],
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          PriceQuantitySection(
+            priceController: priceController,
+            maxQuantityController: maxQuantityController,
+            minQuantityController: minQuantityController,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildOfferToggle() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: checkBoxState ? Colors.red[50] : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: checkBoxState ? Colors.red[200]! : Colors.transparent,
+          width: 2,
+        ),
+      ),
       child: InkWell(
         onTap: () {
           HapticFeedback.selectionClick();
@@ -463,43 +855,69 @@ class _SheetAvailableState extends State<SheetAvailable>
           });
           _validateForm();
         },
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
           child: Row(
             children: [
-              Container(
-                width: 24,
-                height: 24,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
-                  color: checkBoxState ? Colors.red : Colors.transparent,
+                  color: checkBoxState ? Colors.red[600] : Colors.white,
                   border: Border.all(
-                    color: Colors.red,
+                    color: checkBoxState ? Colors.red[600]! : Colors.grey[400]!,
                     width: 2,
                   ),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(6),
+                  boxShadow: checkBoxState
+                      ? [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: checkBoxState
                     ? const Icon(
                         Icons.check,
                         color: Colors.white,
-                        size: 16,
+                        size: 18,
                       )
                     : null,
               ),
               const SizedBox(width: 12),
-              const Text(
-                'إضافة إلى قائمة العروض',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'إضافة إلى قائمة العروض',
+                      style: TextStyle(
+                        color:
+                            checkBoxState ? Colors.red[700] : Colors.grey[700],
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (checkBoxState)
+                      Text(
+                        'سيظهر المنتج في قسم العروض الخاصة',
+                        style: TextStyle(
+                          color: Colors.red[600],
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              const Spacer(),
               Icon(
                 checkBoxState ? Icons.expand_less : Icons.expand_more,
-                color: Colors.red,
+                color: checkBoxState ? Colors.red[600] : Colors.grey[600],
+                size: 28,
               ),
             ],
           ),
@@ -509,36 +927,93 @@ class _SheetAvailableState extends State<SheetAvailable>
   }
 
   Widget _buildOfferSection() {
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.red[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.local_offer, color: Colors.red[700], size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'تفاصيل العرض',
-                style: TextStyle(
-                  color: Colors.red[700],
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+    return AnimatedBuilder(
+      animation: _shakeAnimation,
+      builder: (context, child) {
+        return Transform.translate(
+          offset:
+              Offset(_shakeAnimation.value * (1 - _shakeController.value), 0),
+          child: child,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(top: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.red[50]!, Colors.orange[50]!],
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
           ),
-          const SizedBox(height: 16),
-          _buildExpirationDateButton(context),
-          const SizedBox(height: 16),
-          _buildOfferPriceSection(),
-        ],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.red[200]!, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.red.withOpacity(0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red[600],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.local_offer,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'تفاصيل العرض الخاص',
+                  style: TextStyle(
+                    color: Colors.red[800],
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _buildExpirationDateButton(context),
+            const SizedBox(height: 16),
+            _buildOfferPriceSection(),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.amber[800], size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'سعر العرض يجب أن يكون أقل من السعر الأساسي',
+                      style: TextStyle(
+                        color: Colors.amber[900],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -549,35 +1024,54 @@ class _SheetAvailableState extends State<SheetAvailable>
 
     return InkWell(
       onTap: () => _selectDate(context),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: hasValidDate ? Colors.green : Colors.grey[300]!,
-            width: hasValidDate ? 2 : 1,
+            color: hasValidDate ? Colors.green[400]! : Colors.grey[300]!,
+            width: 2,
           ),
+          boxShadow: hasValidDate
+              ? [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.date_range_outlined,
-              color: hasValidDate ? Colors.green : Colors.grey[600],
+              Icons.calendar_today,
+              color: hasValidDate ? Colors.green[600] : Colors.grey[600],
+              size: 22,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Text(
               selectedDate != null
-                  ? "تاريخ انتهاء العرض: ${_formatDate(selectedDate!)}"
+                  ? "تاريخ الانتهاء: ${_formatDate(selectedDate!)}"
                   : 'اضغط لتحديد تاريخ انتهاء العرض',
               style: TextStyle(
-                color: hasValidDate ? Colors.green : Colors.grey[600],
+                color: hasValidDate ? Colors.green[700] : Colors.grey[700],
                 fontWeight: hasValidDate ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 15,
               ),
             ),
+            if (hasValidDate) ...[
+              const SizedBox(width: 8),
+              Icon(
+                Icons.check_circle,
+                color: Colors.green[600],
+                size: 20,
+              ),
+            ],
           ],
         ),
       ),
@@ -586,11 +1080,18 @@ class _SheetAvailableState extends State<SheetAvailable>
 
   Widget _buildOfferPriceSection() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -598,15 +1099,23 @@ class _SheetAvailableState extends State<SheetAvailable>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'سعر العرض',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Row(
+                  children: [
+                    Icon(Icons.price_change,
+                        color: Colors.orange[700], size: 18),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'سعر العرض',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
+              
                 Counter(
                   controller: offerPriceController,
                   minLimit: 1,
@@ -620,15 +1129,22 @@ class _SheetAvailableState extends State<SheetAvailable>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'أقصى كمية للعرض',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Row(
+                  children: [
+                    Icon(Icons.inventory, color: Colors.blue[700], size: 18),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'أقصى كمية للعرض',
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
+               
                 Counter(
                   controller: maxQuantityControllerOffer,
                   minLimit: 1,
@@ -646,9 +1162,18 @@ class _SheetAvailableState extends State<SheetAvailable>
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 16),
       height: 1,
-      color: Colors.grey[200],
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.transparent,
+            Colors.grey[300]!,
+            Colors.transparent,
+          ],
+        ),
+      ),
     );
   }
+
   Widget _buildBottomActions() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -661,35 +1186,48 @@ class _SheetAvailableState extends State<SheetAvailable>
                 bool isLoading = state is DynamicProductLoading;
 
                 return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 300),
                   child: ElevatedButton(
-                    onPressed: isLoading ? null : _handleSubmit,
+                    onPressed:
+                        isLoading || !_isFormValid ? null : _handleSubmit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          _isFormValid ? Colors.green : Colors.grey,
+                          _isFormValid ? Colors.green[600] : Colors.grey[400],
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      elevation: _isFormValid ? 2 : 0,
+                      elevation: _isFormValid ? 4 : 0,
+                      shadowColor: Colors.green.withOpacity(0.4),
                     ),
                     child: isLoading
                         ? const SizedBox(
-                            height: 20,
-                            width: 20,
+                            height: 22,
+                            width: 22,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                              strokeWidth: 2.5,
                               valueColor:
                                   AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : Text(
-                            checkBoxState ? 'إضافة عرض' : 'تعديل المنتج',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                checkBoxState ? Icons.local_offer : Icons.save,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                checkBoxState ? 'إضافة عرض' : 'حفظ التعديلات',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
                           ),
                   ),
                 );
@@ -700,15 +1238,17 @@ class _SheetAvailableState extends State<SheetAvailable>
           Expanded(
             child: TextButton(
               onPressed: () async {
+                HapticFeedback.lightImpact();
                 await _slideController.reverse();
                 Navigator.pop(context);
               },
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(color: Colors.grey[300]!, width: 2),
                 ),
+                backgroundColor: Colors.grey[50],
               ),
               child: const Text(
                 'إلغاء',

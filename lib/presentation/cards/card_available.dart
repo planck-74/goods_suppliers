@@ -22,10 +22,6 @@ class AvailableCard extends StatefulWidget {
 }
 
 class _AvailableCardState extends State<AvailableCard> {
- 
-
-  
-
   Widget _buildProductImage() {
     if (widget.product != null && widget.product!.containsKey('imageUrl')) {
       return SizedBox(
@@ -257,7 +253,7 @@ class _AvailableCardState extends State<AvailableCard> {
                         ),
                         onPressed: () => _showSheet(
                           context,
-                           widget.product ?? {}, 
+                          widget.product ?? {},
                         ),
                         child: const Text(
                           '  تعديل',
@@ -290,25 +286,42 @@ class _AvailableCardState extends State<AvailableCard> {
                 ),
               ],
             ),
-            if (widget.product!.containsKey('isOnSale') && widget.product?['isOnSale'] == true)
+            if (widget.product!.containsKey('isOnSale') &&
+                widget.product?['isOnSale'] == true)
               Positioned(
-                right: 0,
+                left: 0,
                 top: 0,
                 child: Opacity(
                   opacity: 0.8,
                   child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF00C853), // أخضر فاتح
+                          Color(0xFF009624), // أخضر غامق
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: const BorderRadius.only(
+                        bottomRight: Radius.circular(16), // زود الانحناءة
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.withOpacity(0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: const Text(
                       'في العرض',
                       style: TextStyle(
                         color: whiteColor,
                         fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
