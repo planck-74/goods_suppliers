@@ -4,8 +4,9 @@ class OfferInitial extends OfferState {}
 
 class OfferLoaded extends OfferState {
   final List<dynamic> offerProducts;
+  final DateTime timestamp; // ✅ إضافة timestamp للتحديث التلقائي
 
-  OfferLoaded(this.offerProducts);
+  OfferLoaded(this.offerProducts) : timestamp = DateTime.now();
 }
 
 class OfferLoading extends OfferState {}

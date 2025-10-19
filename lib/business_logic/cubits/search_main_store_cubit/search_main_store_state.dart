@@ -9,8 +9,10 @@ final class SearchMainStoreLoading extends SearchMainStoreState {}
 
 final class SearchMainStoreLoaded extends SearchMainStoreState {
   final List<Map<String, dynamic>> products;
+  final DateTime timestamp; 
 
-  SearchMainStoreLoaded(this.products);
+  SearchMainStoreLoaded(this.products) 
+      : timestamp = DateTime.now();
 }
 
 final class SearchMainStoreError extends SearchMainStoreState {
