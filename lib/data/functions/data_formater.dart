@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 
 String formatTimestamp(Timestamp timestamp) {
   DateTime dateTime = timestamp.toDate();
-  // List of Arabic weekdays
+
+  // أيام الأسبوع بالعربية
   const arabicWeekdays = [
     'الأحد',
     'الإثنين',
@@ -13,14 +14,9 @@ String formatTimestamp(Timestamp timestamp) {
     'الجمعة',
     'السبت'
   ];
-
-  // Extract the weekday in Arabic
   String arabicDay = arabicWeekdays[dateTime.weekday % 7];
-
-  // Format the date and time
   String formattedDate = DateFormat('dd/MM/yyyy').format(dateTime);
+  String period = dateTime.hour < 12 ? 'صباحًا' : 'مساءً';
   String formattedTime = DateFormat('h:mm').format(dateTime);
-
-  // Combine the parts
-  return '$arabicDay   $formattedDate   $formattedTime';
+  return '$arabicDay   $formattedDate   $formattedTime $period';
 }
