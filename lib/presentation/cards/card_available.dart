@@ -289,7 +289,7 @@ class _AvailableCardState extends State<AvailableCard> {
             if (widget.product!.containsKey('isOnSale') &&
                 widget.product?['isOnSale'] == true)
               Positioned(
-                left: 0,
+                right: 0,
                 top: 0,
                 child: Opacity(
                   opacity: 0.8,
@@ -306,7 +306,7 @@ class _AvailableCardState extends State<AvailableCard> {
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: const BorderRadius.only(
-                        bottomRight: Radius.circular(16), // زود الانحناءة
+                        bottomLeft: Radius.circular(16), // زود الانحناءة
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -317,7 +317,7 @@ class _AvailableCardState extends State<AvailableCard> {
                       ],
                     ),
                     child: const Text(
-                      'في العرض',
+                      'عرض',
                       style: TextStyle(
                         color: whiteColor,
                         fontSize: 12,

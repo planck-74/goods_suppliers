@@ -6,6 +6,7 @@ import 'package:goods/business_logic/cubits/dynamic_cubit/dynamic_product_cubit.
 import 'package:goods/business_logic/cubits/dynamic_cubit/dynamic_product_state.dart';
 import 'package:goods/business_logic/cubits/unavailable/unavailable_cubit.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
+import 'package:goods/presentation/custom_widgets/counter.dart';
 import 'package:goods/presentation/custom_widgets/custom_buttons/custom_buttons.dart';
 import 'package:goods/presentation/custom_widgets/custom_progress_indicator.dart';
 import 'package:goods/presentation/sheets/price_quantity_section.dart';
@@ -107,7 +108,7 @@ class _SheetOfferState extends State<SheetOffer> with TickerProviderStateMixin {
       text: widget.product['offerPrice']?.toString() ?? '0',
     );
     maxQuantityControllerOffer = TextEditingController(
-      text: widget.product['maxOrderQuantityForOffer']?.toString() ?? '10',
+      text: widget.product['maxOrderQuantityForOffer']?.toString() ?? '',
     );
   }
 
@@ -697,12 +698,10 @@ class _SheetOfferState extends State<SheetOffer> with TickerProviderStateMixin {
                   ],
                 ),
                 const SizedBox(height: 4),
-                buildFieldRow(
-                  context: context,
-                  label: '',
+                Counter(
                   controller: offerPriceController,
                   minLimit: 1,
-                  maxLimit: 10000,
+                  maxLimit: 50000,
                 ),
               ],
             ),
@@ -727,12 +726,10 @@ class _SheetOfferState extends State<SheetOffer> with TickerProviderStateMixin {
                   ],
                 ),
                 const SizedBox(height: 10),
-                buildFieldRow(
-                  context: context,
-                  label: '',
+                Counter(
                   controller: maxQuantityControllerOffer,
                   minLimit: 1,
-                  maxLimit: 10000,
+                  maxLimit: 50000,
                 ),
               ],
             ),

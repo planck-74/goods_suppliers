@@ -29,13 +29,8 @@ class _SheetAvailableState extends State<SheetAvailable>
   bool _isFormValid = false;
   DateTime? selectedDate;
 
-  // Animation controllers
-  late AnimationController _slideController;
-  late AnimationController _fadeController;
-  late AnimationController _shakeController;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _fadeAnimation;
   late Animation<double> _shakeAnimation;
+  late AnimationController _shakeController;
 
   // Form key for validation
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -63,34 +58,10 @@ class _SheetAvailableState extends State<SheetAvailable>
   }
 
   void _initializeAnimations() {
-    _slideController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
     _shakeController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    ));
 
     _shakeAnimation = Tween<double>(
       begin: 0.0,
@@ -99,9 +70,6 @@ class _SheetAvailableState extends State<SheetAvailable>
       parent: _shakeController,
       curve: Curves.elasticIn,
     ));
-
-    _slideController.forward();
-    _fadeController.forward();
   }
 
   void _initializeTextControllers() {
@@ -118,8 +86,7 @@ class _SheetAvailableState extends State<SheetAvailable>
       text: widget.product['offerPrice']?.toString() ?? '',
     );
     maxQuantityControllerOffer = TextEditingController(
-      text: widget.product['maxOrderQuantityForOffer']?.toString() ?? '10',
-    );
+        text: widget.product['maxOrderQuantityForOffer']?.toString() ?? '');
   }
 
   void _addListeners() {
@@ -146,7 +113,6 @@ class _SheetAvailableState extends State<SheetAvailable>
 
     if (offerPrice != null && mainPrice != null && offerPrice >= mainPrice) {
       _showTopWarning('سعر العرض يجب أن يكون أقل من السعر الأساسي');
-      _triggerShake();
 
       // Auto-correct to be slightly less than main price
       Future.delayed(const Duration(milliseconds: 100), () {
@@ -171,7 +137,6 @@ class _SheetAvailableState extends State<SheetAvailable>
     if (offerMaxQty != null && mainMaxQty != null && offerMaxQty > mainMaxQty) {
       _showTopWarning(
           'الحد الأقصى لكمية العرض يجب أن لا يتجاوز الحد الأقصى للكمية الأساسية');
-      _triggerShake();
 
       // Auto-correct to match main max quantity
       Future.delayed(const Duration(milliseconds: 100), () {
@@ -180,18 +145,6 @@ class _SheetAvailableState extends State<SheetAvailable>
         }
       });
     }
-  }
-
-  void _triggerShake() {
-    _shakeController.reset();
-    _shakeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 10.0,
-    ).animate(CurvedAnimation(
-      parent: _shakeController,
-      curve: Curves.elasticIn,
-    ));
-    _shakeController.forward();
   }
 
   void _validateForm() {
@@ -518,7 +471,7 @@ class _SheetAvailableState extends State<SheetAvailable>
   Future<void> _handleSubmit() async {
     if (!_isFormValid) {
       _showValidationError('يرجى التأكد من صحة جميع البيانات المدخلة');
-      _triggerShake();
+
       return;
     }
 
@@ -602,7 +555,6 @@ class _SheetAvailableState extends State<SheetAvailable>
 
       await Future.delayed(const Duration(milliseconds: 500));
       if (mounted) {
-        await _slideController.reverse();
         Navigator.pop(context);
       }
     } catch (e) {
@@ -613,9 +565,6 @@ class _SheetAvailableState extends State<SheetAvailable>
 
   @override
   void dispose() {
-    _slideController.dispose();
-    _fadeController.dispose();
-    _shakeController.dispose();
     priceController.dispose();
     minQuantityController.dispose();
     maxQuantityController.dispose();
@@ -626,23 +575,39 @@ class _SheetAvailableState extends State<SheetAvailable>
 
   @override
   Widget build(BuildContext context) {
-    return SlideTransition(
-      position: _slideAnimation,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: 16.0,
-            right: 16.0,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16.0,
+    return DraggableScrollableSheet(
+      initialChildSize: 0.9,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      snap: true,
+      snapSizes: const [0.5, 0.9],
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
           ),
-          child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 16.0,
+              right: 16.0,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16.0,
+            ),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                // Changed from SingleChildScrollView
+                controller:
+                    scrollController, // CRITICAL: Use provided controller
+                physics: const ClampingScrollPhysics(),
                 children: [
                   _buildHeader(),
                   const SizedBox(height: 16),
@@ -670,8 +635,8 @@ class _SheetAvailableState extends State<SheetAvailable>
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -988,30 +953,6 @@ class _SheetAvailableState extends State<SheetAvailable>
             const SizedBox(height: 16),
             _buildOfferPriceSection(),
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.amber[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber[200]!),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.amber[800], size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'سعر العرض يجب أن يكون أقل من السعر الأساسي',
-                      style: TextStyle(
-                        color: Colors.amber[900],
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -1115,7 +1056,6 @@ class _SheetAvailableState extends State<SheetAvailable>
                   ],
                 ),
                 const SizedBox(height: 4),
-              
                 Counter(
                   controller: offerPriceController,
                   minLimit: 1,
@@ -1144,7 +1084,6 @@ class _SheetAvailableState extends State<SheetAvailable>
                   ],
                 ),
                 const SizedBox(height: 4),
-               
                 Counter(
                   controller: maxQuantityControllerOffer,
                   minLimit: 1,
@@ -1239,7 +1178,7 @@ class _SheetAvailableState extends State<SheetAvailable>
             child: TextButton(
               onPressed: () async {
                 HapticFeedback.lightImpact();
-                await _slideController.reverse();
+
                 Navigator.pop(context);
               },
               style: TextButton.styleFrom(

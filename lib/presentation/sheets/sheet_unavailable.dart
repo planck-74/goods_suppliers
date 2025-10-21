@@ -109,7 +109,7 @@ class _SheetUnavailableState extends State<SheetUnavailable>
       text: widget.product['offerPrice']?.toString() ?? '0',
     );
     maxQuantityControllerOffer = TextEditingController(
-      text: widget.product['maxOrderQuantityForOffer']?.toString() ?? '10',
+      text: widget.product['maxOrderQuantityForOffer']?.toString() ?? '',
     );
   }
 
