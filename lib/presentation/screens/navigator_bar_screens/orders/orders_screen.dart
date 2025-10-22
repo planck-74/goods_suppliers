@@ -5,7 +5,10 @@ import 'package:goods/business_logic/cubits/orders/orders_state.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/custom_widgets/custom_app_bar%20copy.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/orders/canceled/canceled_screen.dart';
+import 'package:goods/presentation/screens/navigator_bar_screens/orders/confirmed/confirmed_screen.dart';
+import 'package:goods/presentation/screens/navigator_bar_screens/orders/delivering/delivering_screen.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/orders/done/done_screen.dart';
+import 'package:goods/presentation/screens/navigator_bar_screens/orders/neglected/neglected_screen.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/orders/preparing/preparing_screen.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/orders/recent/recent_screen.dart';
 
@@ -34,7 +37,7 @@ class _ordersState extends State<Orders> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 7,
       child: Scaffold(
           appBar: customAppBar(
               context,
@@ -51,86 +54,97 @@ class _ordersState extends State<Orders> {
               Container(
                 height: 40,
                 color: whiteColor,
-                child: TabBar(
-                    labelStyle: const TextStyle(fontSize: 14, fontFamily: 'Cairo'),
-                    indicatorColor: Colors.grey,
+                child: const TabBar(
+                    labelColor: primaryColor,
+                    labelStyle: TextStyle(fontSize: 14, fontFamily: 'Cairo'),
+                    indicatorColor: primaryColor,
                     isScrollable: true,
                     tabs: [
                       Tab(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('حديث'),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: BlocBuilder<OrdersCubit, OrdersState>(
-                                builder: (context, state) {
-                                  if (state is OrdersLoaded) {
-                                    return Text(
-                                      '${state.ordersRecent.length}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    );
-                                  }
-                                  return const Text(
-                                    '0',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+                            Text('حديث'),
+                            // const SizedBox(width: 6),
+                            // Container(
+                            //   padding: const EdgeInsets.symmetric(
+                            //       horizontal: 6, vertical: 2),
+                            //   decoration: BoxDecoration(
+                            //     color: Colors.red,
+                            //     borderRadius: BorderRadius.circular(12),
+                            //   ),
+                            //   child: BlocBuilder<OrdersCubit, OrdersState>(
+                            //     builder: (context, state) {
+                            //       if (state is OrdersLoaded) {
+                            //         return Text(
+                            //           '${state.ordersRecent.length}',
+                            //           style: const TextStyle(
+                            //             color: Colors.white,
+                            //             fontSize: 12,
+                            //             fontWeight: FontWeight.bold,
+                            //           ),
+                            //         );
+                            //       }
+                            //       return const Text(
+                            //         '0',
+                            //         style: TextStyle(
+                            //           color: Colors.white,
+                            //           fontSize: 12,
+                            //           fontWeight: FontWeight.bold,
+                            //         ),
+                            //       );
+                            //     },
+                            //   ),
+                            // ),
                           ],
                         ),
+                      ),
+                      Tab(
+                        child: Text('مؤكد'),
                       ),
                       Tab(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('جارٍ التحضير'),
-                            const SizedBox(width: 6),
-                            BlocBuilder<OrdersCubit, OrdersState>(
-                              builder: (context, state) {
-                                if (state is OrdersLoaded && state.ordersPreparing.isNotEmpty) {
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: Colors.orange,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      '${state.ordersPreparing.length}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  );
-                                }
-                                return const SizedBox();
-                              },
-                            ),
+                            Text('جارٍ التحضير'),
+                            // const SizedBox(width: 6),
+                            // BlocBuilder<OrdersCubit, OrdersState>(
+                            //   builder: (context, state) {
+                            //     if (state is OrdersLoaded &&
+                            //         state.ordersPreparing.isNotEmpty) {
+                            //       return Container(
+                            //         padding: const EdgeInsets.symmetric(
+                            //             horizontal: 6, vertical: 2),
+                            //         decoration: BoxDecoration(
+                            //           color: Colors.orange,
+                            //           borderRadius: BorderRadius.circular(12),
+                            //         ),
+                            //         child: Text(
+                            //           '${state.ordersPreparing.length}',
+                            //           style: const TextStyle(
+                            //             color: Colors.white,
+                            //             fontSize: 12,
+                            //             fontWeight: FontWeight.bold,
+                            //           ),
+                            //         ),
+                            //       );
+                            //     }
+                            //     return const SizedBox();
+                            //   },
+                            // ),
                           ],
                         ),
                       ),
-                      const Tab(
+                      Tab(
+                        child: Text('جاري التوصيل'),
+                      ),
+                      Tab(
                         child: Text('تم التوصيل'),
                       ),
-                      const Tab(
+                      Tab(
+                        child: Text('مهمل'),
+                      ),
+                      Tab(
                         child: Text('ملغي'),
                       ),
                     ]),
@@ -139,8 +153,11 @@ class _ordersState extends State<Orders> {
                 child: TabBarView(
                   children: [
                     Recent(),
+                    Confirmed(),
                     Preparing(),
+                    Delivering(),
                     Done(),
+                    Neglected(),
                     Canceled(),
                   ],
                 ),

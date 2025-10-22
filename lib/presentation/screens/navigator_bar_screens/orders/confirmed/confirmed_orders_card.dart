@@ -8,7 +8,7 @@ import 'package:goods/presentation/custom_widgets/rectangle_Elevated_button.dart
 import 'package:goods/presentation/screens/navigator_bar_screens/orders/widgets/upper_rows.dart';
 import 'package:goods/presentation/sheets/client_sheet.dart';
 
-class RecentOrdersCard extends StatefulWidget {
+class ConfirmedOrdersCard extends StatefulWidget {
   final ClientModel client;
   final OrderModel order;
   final List orders;
@@ -17,7 +17,7 @@ class RecentOrdersCard extends StatefulWidget {
   final VoidCallback onPressed1;
   final VoidCallback? onPressed2;
 
-  const RecentOrdersCard({
+  const ConfirmedOrdersCard({
     super.key,
     required this.order,
     required this.client,
@@ -29,10 +29,10 @@ class RecentOrdersCard extends StatefulWidget {
   });
 
   @override
-  State<RecentOrdersCard> createState() => _RecentOrdersCardState();
+  State<ConfirmedOrdersCard> createState() => _RecentOrdersCardState();
 }
 
-class _RecentOrdersCardState extends State<RecentOrdersCard>
+class _RecentOrdersCardState extends State<ConfirmedOrdersCard>
     with SingleTickerProviderStateMixin {
   List<int> initControllers = [];
   bool _isNoteExpanded = false;

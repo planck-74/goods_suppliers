@@ -8,14 +8,15 @@ import 'package:goods/data/models/order_model.dart';
 import 'package:goods/presentation/custom_widgets/rectangle_Elevated_button.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/orders/widgets/upper_rows.dart';
 import 'package:goods/presentation/sheets/client_sheet.dart';
+import 'package:goods/presentation/sheets/details_sheet.dart';
 
-class DoneOrdersCard extends StatefulWidget {
+class NeglectedOrdersCard extends StatefulWidget {
   final ClientModel client;
   final OrderModel order;
   final List orders;
   final String state;
 
-  const DoneOrdersCard({
+  const NeglectedOrdersCard({
     super.key,
     required this.order,
     required this.client,
@@ -24,10 +25,10 @@ class DoneOrdersCard extends StatefulWidget {
   });
 
   @override
-  State<DoneOrdersCard> createState() => _DoneOrdersCardState();
+  State<NeglectedOrdersCard> createState() => _NeglectedOrdersCardState();
 }
 
-class _DoneOrdersCardState extends State<DoneOrdersCard> {
+class _NeglectedOrdersCardState extends State<NeglectedOrdersCard> {
   List<int> initControllers = [];
 
   @override
@@ -69,32 +70,6 @@ class _DoneOrdersCardState extends State<DoneOrdersCard> {
               children: [
                 upperRows(context, order, client),
                 const SizedBox(height: 12),
-                Center(
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'تم التوصيل بتاريخ',
-                            style: TextStyle(color: Colors.grey, fontSize: 16),
-                          ),
-                          Text(
-                            formatTimestamp(order.doneAt ?? order.date),
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Divider(),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // استخدام Expanded لجعل الأزرار تتكيف مع عرض الشاشة
                 Row(
                   children: [
                     Expanded(
@@ -156,6 +131,45 @@ class _DoneOrdersCardState extends State<DoneOrdersCard> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(
+                  height: 12,
+                ),
+                ElevatedButton2(
+                  elevation: 5,
+                  height: 50,
+                  width: double.infinity,
+                  color: primaryColor,
+                  sideColor: primaryColor,
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'تفاصيل',
+                        style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(
+                        width: 8,
+                      ),
+                      Icon(Icons.info_outline, color: whiteColor, size: 24),
+                    ],
+                  ),
+                  onPressed: () async {
+                    showModalBottomSheet(
+                      backgroundColor: Colors.white,
+                      context: context,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(16)),
+                      ),
+                      builder: (BuildContext context) {
+                        return DetailsSheet(order: order,);
+                      },
+                    );
+                  },
                 ),
               ],
             ),

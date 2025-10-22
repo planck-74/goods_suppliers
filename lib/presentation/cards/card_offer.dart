@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:goods/business_logic/cubits/available/available_cubit.dart';
 import 'package:goods/business_logic/cubits/dynamic_cubit/dynamic_product_cubit.dart';
@@ -26,48 +27,39 @@ class OfferCard extends StatefulWidget {
 }
 
 class _OfferCardState extends State<OfferCard> {
-  /// يعرض صورة المنتج مع التعامل مع حالات التحميل والأخطاء
-  Widget _buildProductImage() {
-    if (widget.product.containsKey('imageUrl')) {
-      return SizedBox(
-        height: 115,
-        width: 100,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
-          child: Image.network(
-            widget.product['imageUrl'],
-            fit: BoxFit.contain,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          (loadingProgress.expectedTotalBytes ?? 1)
-                      : null,
-                ),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) {
-              return Center(
-                child: Text(
-                  'لا توجد صورة',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-              );
-            },
+Widget _buildProductImage() {
+  if (widget.product.containsKey('imageUrl')) {
+    final imageUrl = widget.product['imageUrl'];
+
+    return SizedBox(
+      height: 115,
+      width: 100,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: BoxFit.contain,
+          placeholder: (context, url) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+          errorWidget: (context, url, error) => Center(
+            child: Text(
+              'لا توجد صورة',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
           ),
         ),
-      );
-    } else {
-      return Container(
-        height: 115,
-        width: 100,
-        color: Colors.grey[200],
-        child: const Center(child: Text('No Image')),
-      );
-    }
+      ),
+    );
+  } else {
+    return Container(
+      height: 115,
+      width: 100,
+      color: Colors.grey[200],
+      child: const Center(child: Text('No Image')),
+    );
   }
+}
 
   Widget _buildProductDetails(Map<String, dynamic>? product) {
     final String title = '${product?['name']}'

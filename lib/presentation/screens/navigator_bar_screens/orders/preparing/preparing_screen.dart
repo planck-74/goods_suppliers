@@ -19,22 +19,22 @@ class Preparing extends StatefulWidget {
 class _PreparingState extends State<Preparing> {
   bool isRecentFirst = true;
   final ScrollController _scrollController = ScrollController();
-  
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
   }
-  
+
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
-  
+
   void _onScroll() {
-    if (_scrollController.position.pixels >= 
+    if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent * 0.8) {
       context.read<OrdersCubit>().loadMorePreparingOrders();
     }
@@ -52,9 +52,8 @@ class _PreparingState extends State<Preparing> {
           List preparingOrders = List.from(state.ordersPreparing);
 
           preparingOrders.sort((a, b) => isRecentFirst
-                  ? b.date.compareTo(a.date)
-                  : a.date.compareTo(b.date)
-              );
+              ? b.date.compareTo(a.date)
+              : a.date.compareTo(b.date));
 
           return Column(
             children: [
@@ -67,9 +66,12 @@ class _PreparingState extends State<Preparing> {
                       ? ListView.builder(
                           controller: _scrollController,
                           physics: const AlwaysScrollableScrollPhysics(),
-                          itemCount: preparingOrders.length + 
+                          itemCount: preparingOrders.length +
                               (state.isLoadingMorePreparing ? 1 : 0) +
-                              (!state.hasMorePreparing && preparingOrders.isNotEmpty ? 1 : 0),
+                              (!state.hasMorePreparing &&
+                                      preparingOrders.isNotEmpty
+                                  ? 1
+                                  : 0),
                           itemBuilder: (BuildContext context, int index) {
                             if (index == preparingOrders.length) {
                               if (state.isLoadingMorePreparing) {
@@ -100,11 +102,12 @@ class _PreparingState extends State<Preparing> {
                             return RecentOrdersCard(
                               client: client,
                               order: order,
-                              state: 'توصيل',
+                              state: 'بدء التوصيل',
                               onPressed1: () => showConfirmationDialog(
                                 context: context,
                                 content: 'هل تم توصيل هذا الطلب؟',
-                                onConfirm: () => orderDone(context, order),
+                                onConfirm: () =>
+                                    startDelivering(context, order),
                               ),
                               onPressed2: () => showConfirmationDialog(
                                 context: context,
@@ -142,7 +145,8 @@ class _PreparingState extends State<Preparing> {
                 const Text('حدث خطأ في تحميل الطلبات'),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => context.read<OrdersCubit>().fetchInitialOrders(),
+                  onPressed: () =>
+                      context.read<OrdersCubit>().fetchInitialOrders(),
                   child: const Text('إعادة المحاولة'),
                 ),
               ],
@@ -216,10 +220,10 @@ class _PreparingState extends State<Preparing> {
   }
 }
 
-void orderDone(BuildContext context, dynamic order) async {
+void startDelivering(BuildContext context, dynamic order) async {
   final ordersCubit = BlocProvider.of<OrdersCubit>(context);
-  ordersCubit.updateState(order.orderCode.toString(), 'تم التوصيل');
-  
+  ordersCubit.updateState(order.orderCode.toString(), 'جاري التوصيل');
+
   final currentOrder = order as OrderModel;
   final products = currentOrder.products;
   List<String> Ids = [];

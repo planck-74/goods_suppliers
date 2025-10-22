@@ -5,18 +5,17 @@ import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/data/models/client_model.dart';
 import 'package:goods/data/models/order_model.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/orders/orders_done&canceled_items.dart';
-import 'package:goods/presentation/screens/navigator_bar_screens/orders/widgets/order_lower_container.dart';
-import 'package:goods/presentation/screens/navigator_bar_screens/orders/recent/recent_items.dart';
+import 'package:goods/presentation/screens/navigator_bar_screens/orders/preparing/preparing_items.dart';
 import 'package:goods/presentation/custom_widgets/custom_app_bar%20copy.dart';
 
-class RecentItemsScreen extends StatefulWidget {
-  const RecentItemsScreen({super.key});
+class PreparingItemsScreen extends StatefulWidget {
+  const PreparingItemsScreen({super.key});
 
   @override
-  State<RecentItemsScreen> createState() => _RecentItemsState();
+  State<PreparingItemsScreen> createState() => _RecentItemsState();
 }
 
-class _RecentItemsState extends State<RecentItemsScreen> {
+class _RecentItemsState extends State<PreparingItemsScreen> {
   List<TextEditingController> controllers = [];
   List<bool> productSelection = [];
 
@@ -56,11 +55,7 @@ class _RecentItemsState extends State<RecentItemsScreen> {
     final ClientModel client = data['client'];
     final OrderModel order = data['order'];
     final List<int> initControllers = data['initControllers'];
-    int countTrueValues(List<bool> list) {
-      // Filter the list for true values and get the length of the filtered list
-      return list.where((item) => item == true).length;
-    }
-
+   
     return Scaffold(
       backgroundColor: whiteColor,
       appBar: customAppBar(
@@ -73,9 +68,10 @@ class _RecentItemsState extends State<RecentItemsScreen> {
             ),
             const Spacer(flex: 1),
             Text(
-              '${order.products.length}/${countTrueValues(selectionList)}',
+              '${order.products.length} أصناف',
               style: const TextStyle(
-                  color: whiteColor, fontWeight: FontWeight.bold),
+                color: whiteColor,
+              ),
             ),
             const SizedBox(
               width: 12,
@@ -91,7 +87,7 @@ class _RecentItemsState extends State<RecentItemsScreen> {
               client: client,
               selectedProducts: selectedProducts,
             ),
-            recentItems(
+            preparingItems(
                 products: order.products,
                 selectionList: selectionList,
                 controllers: controllers,
@@ -99,21 +95,6 @@ class _RecentItemsState extends State<RecentItemsScreen> {
                 order: order,
                 selectedProducts: selectedProducts,
                 initControllers: initControllers),
-            LowerContainer(
-              order: order,
-              client: client,
-              controllers: controllers,
-              selectionList: selectionList,
-              onPressed: () {
-                context
-                    .read<OrdersCubit>()
-                    .removeFromFirebase(order.products, order.orderCode.toString());
-                context.read<OrdersCubit>().updateProductControllers(
-                    controllers, order.products, order.orderCode.toString());
-              },
-              selectedProducts: selectedProducts,
-            ),
-            const SizedBox(height: 12),
           ],
         ),
       ),

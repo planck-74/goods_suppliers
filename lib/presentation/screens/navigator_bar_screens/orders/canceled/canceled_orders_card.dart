@@ -136,7 +136,7 @@ class _CanceledOrdersCardState extends State<CanceledOrdersCard> {
 
                         final k =
                             context.read<OrdersCubit>().productSelection(order);
-                        await context.read<OrdersCubit>().initselectedProducts(
+                        await context.read<OrdersCubit>().initSelectedProducts(
                             order.products, k, selectedProducts, c);
                         Navigator.pushNamed(context, '/PreparingItemsScreen',
                             arguments: {

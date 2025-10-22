@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/data/models/order_model.dart';
@@ -62,51 +63,50 @@ class _ItemsCardState extends State<ItemsCard> {
     return productTotal;
   }
 
-  Widget _buildProductImage() {
-    if (widget.product['product'].containsKey('imageUrl')) {
-      return SizedBox(
-        height: 100,
-        width: 100,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8.0),
-          child: Image.network(
-            widget.product['product']['imageUrl'],
-            fit: BoxFit.contain,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Center(
-                child: CircularProgressIndicator(
-                  color: darkBlueColor,
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          (loadingProgress.expectedTotalBytes ?? 1)
-                      : null,
-                ),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) {
-              return Center(
-                child: Text('لا توجد صورة',
-                    style: Theme.of(context).textTheme.headlineMedium),
-              );
-            },
+ 
+Widget _buildProductImage() {
+  final productData = widget.product['product'];
+
+  if (productData.containsKey('imageUrl')) {
+    final imageUrl = productData['imageUrl'];
+
+    return SizedBox(
+      height: 100,
+      width: 100,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          fit: BoxFit.contain,
+          fadeInDuration: const Duration(milliseconds: 300),
+          placeholder: (context, url) => const Center(
+            child: CircularProgressIndicator(
+              color: darkBlueColor,
+            ),
+          ),
+          errorWidget: (context, url, error) => Center(
+            child: Text(
+              'لا توجد صورة',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
           ),
         ),
-      );
-    } else {
-      return Container(
-        height: 100,
-        width: 70,
-        color: Colors.grey[200],
-        child: const Center(
-          child: Text(
-            'الصورة غير متوفرة',
-            style: TextStyle(fontSize: 8),
-          ),
+      ),
+    );
+  } else {
+    return Container(
+      height: 100,
+      width: 70,
+      color: Colors.grey[200],
+      child: const Center(
+        child: Text(
+          'الصورة غير متوفرة',
+          style: TextStyle(fontSize: 8),
         ),
-      );
-    }
+      ),
+    );
   }
+}
 
   Widget _buildProductDetails() {
     return Expanded(

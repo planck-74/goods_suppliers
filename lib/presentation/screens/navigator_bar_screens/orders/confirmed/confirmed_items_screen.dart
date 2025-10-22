@@ -105,9 +105,8 @@ class _RecentItemsState extends State<RecentItemsScreen> {
               controllers: controllers,
               selectionList: selectionList,
               onPressed: () {
-                context
-                    .read<OrdersCubit>()
-                    .removeFromFirebase(order.products, order.orderCode.toString());
+                context.read<OrdersCubit>().removeFromFirebase(
+                    order.products, order.orderCode.toString());
                 context.read<OrdersCubit>().updateProductControllers(
                     controllers, order.products, order.orderCode.toString());
               },

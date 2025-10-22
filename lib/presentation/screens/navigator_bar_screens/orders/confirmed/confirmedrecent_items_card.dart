@@ -82,21 +82,16 @@ class _RecentItemsCardState extends State<RecentItemsCard> {
 
   Widget _buildProductImage() {
     if (widget.product.containsKey('imageUrl')) {
-      final imageUrl = widget.product['imageUrl'];
-
       return SizedBox(
         height: 100,
         width: 100,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8.0),
           child: CachedNetworkImage(
-            imageUrl: imageUrl,
+            imageUrl: widget.product['imageUrl'],
             fit: BoxFit.contain,
-            fadeInDuration: const Duration(milliseconds: 300),
             placeholder: (context, url) => const Center(
-              child: CircularProgressIndicator(
-                color: darkBlueColor,
-              ),
+              child: CircularProgressIndicator(color: darkBlueColor),
             ),
             errorWidget: (context, url, error) => Center(
               child: Text(

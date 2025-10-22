@@ -11,6 +11,7 @@ class OrderModel {
   final List products;
   final Timestamp? doneAt;
   final String note; // Added note field
+  final bool reDelivery; // Added reDelivery field
   ClientModel? client;
 
   OrderModel({
@@ -23,6 +24,7 @@ class OrderModel {
     required this.products,
     this.doneAt,
     this.note = '', // Default value for note
+    this.reDelivery = false, // Default value for reDelivery
     this.client,
   });
 
@@ -37,6 +39,7 @@ class OrderModel {
       products: map['products'] is List ? map['products'] : [],
       doneAt: map['doneAt'] is Timestamp ? map['doneAt'] : null,
       note: map['note'] ?? '', // Map note field
+      reDelivery: map['reDelivery'] is bool ? map['reDelivery'] : false, // Map reDelivery field
     );
   }
 
@@ -56,6 +59,7 @@ class OrderModel {
       'products': products,
       'doneAt': doneAt,
       'note': note, // Add note to map
+      'reDelivery': reDelivery, // Add reDelivery to map
     };
   }
 }

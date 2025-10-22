@@ -61,7 +61,7 @@ class _CounterRowState extends State<CounterRow> {
             if (currentValue < widget.initControllers[widget.index] &&
                 currentValue < widget.maxLimit) {
               increment();
-              await context.read<OrdersCubit>().initselectedProducts(
+              await context.read<OrdersCubit>().initSelectedProducts(
                     widget.order.products,
                     widget.selectionList,
                     widget.selectedProducts,
@@ -105,7 +105,7 @@ class _CounterRowState extends State<CounterRow> {
           onPressed: () async {
             if (currentValue > widget.minLimit) {
               decrement();
-              await context.read<OrdersCubit>().initselectedProducts(
+              await context.read<OrdersCubit>().initSelectedProducts(
                     widget.order.products,
                     widget.selectionList,
                     widget.selectedProducts,

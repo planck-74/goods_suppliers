@@ -4,19 +4,19 @@ import 'package:goods/business_logic/cubits/orders/orders_cubit.dart';
 import 'package:goods/business_logic/cubits/orders/orders_state.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/custom_widgets/dialog_confirmation.dart';
-import 'package:goods/presentation/screens/navigator_bar_screens/orders/recent/recent_orders_card.dart';
+import 'package:goods/presentation/screens/navigator_bar_screens/orders/confirmed/confirmed_orders_card.dart';
 import 'package:goods/presentation/skeletons/recent_orders_card_skeleton.dart';
 
-class Recent extends StatefulWidget {
-  const Recent({super.key});
+class Confirmed extends StatefulWidget {
+  const Confirmed({super.key});
 
   @override
-  State<Recent> createState() => _RecentState();
+  State<Confirmed> createState() => _ConfirmedState();
 }
 
-class _RecentState extends State<Recent> {
+class _ConfirmedState extends State<Confirmed> {
   /// Flag to indicate sorting order.
-  bool isRecentFirst = true;
+  bool isConfirmedFirst = true;
 
   /// Scroll controller for detecting when to load more
   final ScrollController _scrollController = ScrollController();
@@ -25,8 +25,7 @@ class _RecentState extends State<Recent> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // Initial load is handled by the parent widget or when cubit is created
-    // If not loaded yet, load initial data
+
     if (context.read<OrdersCubit>().state is OrdersInitial) {
       context.read<OrdersCubit>().fetchInitialOrders();
     }
@@ -43,7 +42,7 @@ class _RecentState extends State<Recent> {
     // Trigger load more when reaching 80% of the list
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent * 0.8) {
-      context.read<OrdersCubit>().loadMoreRecentOrders();
+      context.read<OrdersCubit>().loadMoreConfirmedOrders();
     }
   }
 
@@ -56,12 +55,12 @@ class _RecentState extends State<Recent> {
     return BlocBuilder<OrdersCubit, OrdersState>(
       builder: (context, state) {
         if (state is OrdersLoaded) {
-          final recentOrders = state.ordersRecent;
-          List sortedOrders = List.from(recentOrders);
+          final ConfirmedOrders = state.ordersConfirmed;
+          List sortedOrders = List.from(ConfirmedOrders);
 
           if (sortedOrders.isNotEmpty) {
             sortedOrders.sort((a, b) {
-              return isRecentFirst
+              return isConfirmedFirst
                   ? b.date.compareTo(a.date)
                   : a.date.compareTo(b.date);
             });
@@ -79,14 +78,14 @@ class _RecentState extends State<Recent> {
                           controller: _scrollController,
                           physics: const AlwaysScrollableScrollPhysics(),
                           itemCount: sortedOrders.length +
-                              (state.isLoadingMoreRecent ? 1 : 0) +
-                              (!state.hasMoreRecent && sortedOrders.isNotEmpty
+                              (state.isLoadingMoreConfirmed ? 1 : 0) +
+                              (!state.hasMoreConfirmed &&
+                                      sortedOrders.isNotEmpty
                                   ? 1
                                   : 0),
                           itemBuilder: (BuildContext context, int index) {
-                            // Show loading indicator at the bottom
                             if (index == sortedOrders.length) {
-                              if (state.isLoadingMoreRecent) {
+                              if (state.isLoadingMoreConfirmed) {
                                 return const Padding(
                                   padding: EdgeInsets.all(16.0),
                                   child: Center(
@@ -95,7 +94,7 @@ class _RecentState extends State<Recent> {
                                     ),
                                   ),
                                 );
-                              } else if (!state.hasMoreRecent) {
+                              } else if (!state.hasMoreConfirmed) {
                                 return const Padding(
                                   padding: EdgeInsets.all(16.0),
                                   child: Center(
@@ -111,14 +110,14 @@ class _RecentState extends State<Recent> {
                             final order = sortedOrders[index];
                             final client = order.client;
 
-                            return RecentOrdersCard(
+                            return ConfirmedOrdersCard(
                               client: client,
                               order: order,
-                              state: 'تاكيد',
+                              state: 'بدء التحضير',
                               onPressed1: () => showConfirmationDialog(
                                 context: context,
-                                content: 'هل أنت موافق علي ارسال هذا الطلب؟',
-                                onConfirm: () => confirm(context, order),
+                                content: 'هل أنت جاهز لتحضير هذا الطلب؟',
+                                onConfirm: () => startPreparing(context, order),
                               ),
                               onPressed2: () => showConfirmationDialog(
                                 context: context,
@@ -128,7 +127,7 @@ class _RecentState extends State<Recent> {
                                 onConfirm: () => cancel(context, order),
                               ),
                               orders: sortedOrders,
-                              navigatorScreen: '/RecentItemsScreen',
+                              navigatorScreen: '/ConfirmedItemsScreen',
                             );
                           },
                         )
@@ -137,7 +136,7 @@ class _RecentState extends State<Recent> {
                           children: const [
                             SizedBox(height: 200),
                             Center(
-                              child: Text('لا توجد طلبات حديثة'),
+                              child: Text('لا توجد طلبات مؤكدة'),
                             ),
                           ],
                         ),
@@ -206,14 +205,14 @@ class _RecentState extends State<Recent> {
                 ),
                 Icon(
                   Icons.arrow_upward,
-                  color: isRecentFirst ? Colors.grey : Colors.blue,
+                  color: isConfirmedFirst ? Colors.grey : Colors.blue,
                 ),
               ],
             ),
             onPressed: () {
-              if (isRecentFirst) {
+              if (isConfirmedFirst) {
                 setState(() {
-                  isRecentFirst = false;
+                  isConfirmedFirst = false;
                 });
               }
             },
@@ -228,14 +227,14 @@ class _RecentState extends State<Recent> {
                 ),
                 Icon(
                   Icons.arrow_downward,
-                  color: isRecentFirst ? Colors.blue : Colors.grey,
+                  color: isConfirmedFirst ? Colors.blue : Colors.grey,
                 ),
               ],
             ),
             onPressed: () {
-              if (!isRecentFirst) {
+              if (!isConfirmedFirst) {
                 setState(() {
-                  isRecentFirst = true;
+                  isConfirmedFirst = true;
                 });
               }
             },
@@ -246,9 +245,9 @@ class _RecentState extends State<Recent> {
   }
 }
 
-void confirm(BuildContext context, dynamic order) {
+void startPreparing(BuildContext context, dynamic order) {
   final ordersCubit = BlocProvider.of<OrdersCubit>(context);
-  ordersCubit.updateState(order.orderCode.toString(), 'مؤكد');
+  ordersCubit.updateState(order.orderCode.toString(), 'جاري التحضير');
 }
 
 void cancel(BuildContext context, dynamic order) {

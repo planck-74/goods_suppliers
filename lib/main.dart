@@ -39,9 +39,6 @@ void main() async {
   } else {
     debugPrint('Skipping FirebaseMessaging init on desktop (no platform implementation).');
   }
-
-  
-
   runApp( GoodsSuppliers());
 }
 
