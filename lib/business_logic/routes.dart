@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:goods/presentation/screens/auth_screens/auth_custom_widgets.dart/location_picker.dart';
-import 'package:goods/presentation/screens/auth_screens/sign_pages/get_supplier_details.dart';
 import 'package:goods/presentation/screens/auth_screens/sign_pages/otp_screen.dart';
 import 'package:goods/presentation/screens/edit_profile_screen.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/contact/chat_screen.dart';
@@ -23,5 +22,4 @@ final Map<String, WidgetBuilder> routes = {
   '/PreparingItemsScreen': (context) => const PreparingItemsScreen(),
   '/OrdersDoneCanceledItems': (context) => const OrdersDoneCanceledItems(),
   '/ChatScreen': (context) => const EnhancedChatScreen(),
-  '/GetSupplierDetailsScreen': (context) => const GetSupplierDetailsScreen(),
 };

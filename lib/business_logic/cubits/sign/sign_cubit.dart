@@ -10,7 +10,6 @@ import 'package:goods/business_logic/cubits/get_supplier_data/get_supplier_data_
 import 'package:goods/business_logic/cubits/search_main_store_cubit/search_main_store_cubit.dart';
 import 'package:goods/business_logic/cubits/supplier_data/controller_cubit.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
-import 'package:goods/data/models/supplier_model.dart';
 import 'package:goods/presentation/custom_widgets/snack_bar_errors.dart';
 import 'package:goods/services/auth_service.dart';
 
@@ -158,12 +157,6 @@ class SignCubit extends Cubit<SignState> {
     }
   }
 
-  Future<void> saveSupplier(SupplierModel supplier) async {
-    try {
-      await db.collection('suppliers').doc(supplier.uid).set(supplier.toMap());
-      emit(SignLoaded());
-    } catch (e) {}
-  }
 
   Future<String> uploadImage({
     required BuildContext context,

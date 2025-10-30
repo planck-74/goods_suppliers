@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:goods/business_logic/providers.dart';
 import 'package:goods/business_logic/routes.dart';
+import 'package:goods/data/constants/constants.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/firebase_options.dart';
 import 'package:goods/presentation/splash_screen.dart';
@@ -48,6 +49,7 @@ class GoodsSuppliers extends StatelessWidget {
   GoodsSuppliers({super.key});
   @override
   Widget build(BuildContext context) {
+
     return MultiBlocProvider(
       providers: providers,
       child: MaterialApp(

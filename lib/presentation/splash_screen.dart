@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/business_logic/auth_check.dart';
 import 'package:goods/business_logic/cubits/get_supplier_data/get_supplier_data_cubit.dart';
 import 'package:goods/business_logic/cubits/search_main_store_cubit/search_main_store_cubit.dart';
+import 'package:goods/data/constants/constants.dart';
 import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:lottie/lottie.dart';
 
@@ -16,11 +17,16 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   @override
-  void initState() {
-    super.initState();
-    context.read<GetSupplierDataCubit>().getSupplierData();
-    context.read<SearchMainStoreCubit>().fetchAllStoreProducts(storeId);
-  }
+void initState() {
+  super.initState();
+  _initializeData();
+}
+
+Future<void> _initializeData() async {
+  supplierId = await PhoneNumberManager.getPhoneNumber() ?? '';
+  context.read<GetSupplierDataCubit>().getSupplierData();
+  context.read<SearchMainStoreCubit>().fetchAllStoreProducts(storeId);
+}
 
   @override
   Widget build(BuildContext context) {

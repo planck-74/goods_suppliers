@@ -2,7 +2,6 @@ import 'dart:io';
 // Importing dart:math to use Random
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:goods/business_logic/cubits/firestore/firestore_cubits.dart';
 import 'package:goods/business_logic/cubits/supplier_data/controller_cubit.dart';
 import 'package:goods/business_logic/cubits/upload_supplier_data/upload_supplier_data_state.dart';
 import 'package:goods/data/functions/fetch_store_id.dart';
@@ -44,7 +43,7 @@ class UploadSupplierDataCubit extends Cubit<UploadSupplierDataState> {
     try {
       // Extract necessary data before the async operation
       final imageFile = (state as ImageLoaded).image;
-      final firestoreCubit = context.read<FirestoreCubit>();
+
       final controllerCubit = context.read<ControllerCubit>();
       final currentUser = FirebaseAuth.instance.currentUser;
 
@@ -63,7 +62,7 @@ class UploadSupplierDataCubit extends Cubit<UploadSupplierDataState> {
       }
 
       // Save client data
-      await firestoreCubit.saveSupplier(ClientModel(
+      await saveSupplier(ClientModel(
         uid: currentUser!.uid,
         businessName: controllerCubit.businessNameController.text,
         category: '',
@@ -72,7 +71,8 @@ class UploadSupplierDataCubit extends Cubit<UploadSupplierDataState> {
         secondPhoneNumber: controllerCubit.secondPhoneNumber.text,
         geoLocation: controllerCubit.geoLocation ?? const GeoPoint(0, 0),
         government: '',
-        town: '', addressTyped: '',
+        town: '',
+        addressTyped: '',
       ));
 
       if (!context.mounted) return;
@@ -82,6 +82,15 @@ class UploadSupplierDataCubit extends Cubit<UploadSupplierDataState> {
     } catch (e) {
       emit(UploadSupplierDataError('Failed to upload Client data: $e'));
     }
+  }
+
+  Future<void> saveSupplier(ClientModel client) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('supplier')
+          .doc(supplierId)
+          .set(client.toMap());
+    } catch (e) {}
   }
 
   Future<void> updateClientData(BuildContext context) async {

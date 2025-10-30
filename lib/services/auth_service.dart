@@ -70,7 +70,7 @@ class AuthService {
     }
   }
 
-  // Helper method to show SnackBar messages
+ 
   static void showSnackBar(
       BuildContext context, String message, Color backgroundColor) {
     snackBarErrors(context: context, text: message);

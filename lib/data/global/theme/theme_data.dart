@@ -6,8 +6,8 @@ const Color darkBlueColor = Color(0xFF012340);
 const Color whiteColor = Colors.white;
 const Color scaffoldBackgroundColor = Color.fromARGB(255, 232, 232, 232);
 const Color lightBackgroundColor = whiteColor;
-String supplierId = 'w3Px6Xg8mnUgqJXknJDG9zpbL4Q2';
-String storeId = 'cafb6e90-0ab1-11f0-b25a-8b76462b3bd5';
+String supplierId =  '';
+String storeId = supplierId;
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
  

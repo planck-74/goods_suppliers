@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goods/business_logic/cubits/sign/sign_cubit.dart';
 import 'package:goods/business_logic/cubits/supplier_data/controller_cubit.dart';
+import 'package:goods/data/constants/constants.dart';
+import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/presentation/custom_widgets/custom_buttons/rectangle_Elevated_button.dart';
 import 'package:goods/presentation/custom_widgets/custom_textfield.dart';
 import 'package:goods/presentation/screens/auth_screens/auth_custom_widgets.dart/animited_text.dart';
@@ -12,6 +14,8 @@ Widget buildPhoneNumberSignUp({
   required BuildContext context,
   required GlobalKey<FormState> formKey,
 }) {
+  TextEditingController phoneNumber =
+      context.read<ControllerCubit>().phoneNumber;
   return Form(
     key: formKey,
     child: Column(
@@ -34,7 +38,7 @@ Widget buildPhoneNumberSignUp({
           width: screenWidth,
           labelText: 'رقم الهاتف',
           validationText: 'أدخل رقم الهاتف',
-          controller: context.read<ControllerCubit>().phoneNumber,
+          controller: phoneNumber,
           keyboardType: const TextInputType.numberWithOptions(),
           validator: (String? value) {
             if (value == null || value.isEmpty) {
@@ -49,9 +53,11 @@ Widget buildPhoneNumberSignUp({
         rectangleElevatedButton(
           screenWidth: screenWidth,
           formKey: formKey,
-          onPressed: () {
+          onPressed: () async {
             BlocProvider.of<SignCubit>(context)
                 .signWithPhoneNumber(formKey: formKey, context: context);
+            PhoneNumberManager.savePhoneNumber(phoneNumber.text);
+            supplierId = await PhoneNumberManager.getPhoneNumber() ?? '';
           },
         ),
         SizedBox(height: screenHeight * 0.23),
