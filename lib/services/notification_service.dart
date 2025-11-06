@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// Must be a top-level function for background handling.
@@ -119,7 +120,7 @@ class NotificationService {
       final user = _auth.currentUser;
 
       if (token != null && user != null) {
-        await _firestore.collection('suppliers').doc(user.uid).set({
+        await _firestore.collection('suppliers').doc(supplierId).set({
           'fcmTokens': FieldValue.arrayUnion([token]),
           'tokenLastUpdated': FieldValue.serverTimestamp(),
           'platform': Platform.isAndroid ? 'android' : 'ios',
@@ -141,7 +142,7 @@ class NotificationService {
       final user = _auth.currentUser;
 
       if (token != null && user != null) {
-        await _firestore.collection('suppliers').doc(user.uid).update({
+        await _firestore.collection('suppliers').doc(supplierId).update({
           'fcmTokens': FieldValue.arrayRemove([token]),
         });
         debugPrint('FCM token removed: $token');
@@ -156,7 +157,7 @@ class NotificationService {
     try {
       final user = _auth.currentUser;
       if (user != null) {
-        await _firestore.collection('suppliers').doc(user.uid).update({
+        await _firestore.collection('suppliers').doc(supplierId).update({
           'fcmTokens': FieldValue.delete(),
         });
         debugPrint('All FCM tokens removed for user: ${user.uid}');

@@ -3,6 +3,7 @@ import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:goods/business_logic/cubits/orders/orders_state.dart';
+import 'package:goods/data/global/theme/theme_data.dart';
 import 'package:goods/data/models/client_model.dart';
 import 'package:goods/data/models/order_model.dart';
 
@@ -123,7 +124,7 @@ class OrdersCubit extends Cubit<OrdersState> {
     ];
 
     for (var orderState in states) {
-      _streamSubscriptions[orderState] = db
+      _streamSubscriptions[orderState] = db.collection('suppliers').doc(supplierId)
           .collection('orders')
           .where('state', isEqualTo: orderState)
           .orderBy('date', descending: true)
@@ -523,7 +524,7 @@ class OrdersCubit extends Cubit<OrdersState> {
     String orderState,
     DocumentSnapshot? lastDoc,
   ) async {
-    Query query = db
+    Query query = db.collection('suppliers').doc(supplierId)
         .collection('orders')
         .where('state', isEqualTo: orderState)
         .orderBy('date', descending: true)
@@ -661,7 +662,7 @@ class OrdersCubit extends Cubit<OrdersState> {
   Future<void> updateState(String orderCode, String newState) async {
     try {
       // Update Firestore - streams will handle the rest
-      await db.collection('orders').doc(orderCode).update({
+      db.collection('suppliers').doc(supplierId).collection('orders').doc(orderCode).update({
         'state': newState,
         'doneAt': newState == 'تم التوصيل' ? FieldValue.serverTimestamp() : null,
       });
@@ -729,14 +730,14 @@ class OrdersCubit extends Cubit<OrdersState> {
       },
     );
 
-    await db.collection('orders').doc(orderCode).update({
+    await db..collection('suppliers').doc(supplierId).collection('orders').doc(orderCode).update({
       'products': updatedProducts,
     });
   }
 
   Future<void> removeFromFirebase(List products, String orderCode) async {
     if (products.length > selectedProducts.length) {
-      await db.collection('orders').doc(orderCode).update({
+      await db.collection('suppliers').doc(supplierId).collection('orders').doc(orderCode).update({
         'products': selectedProducts,
       });
     }

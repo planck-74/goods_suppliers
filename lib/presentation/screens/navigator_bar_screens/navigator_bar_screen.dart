@@ -20,7 +20,6 @@ class _NvigatorBarState extends State<NavigatorBar> {
     const Orders(),
     const Store(),
     const Reports(),
-    const Contact(),
     const Profile(),
   ];
   itemSelected(int index) {
@@ -72,13 +71,6 @@ class _NvigatorBarState extends State<NavigatorBar> {
                 AssetImage('assets/icons/reports.png'),
               ),
               label: 'تقارير',
-            ),
-            BottomNavigationBarItem(
-              icon: ImageIcon(
-                size: 38,
-                AssetImage('assets/icons/chat.png'),
-              ),
-              label: 'تـواصل',
             ),
             BottomNavigationBarItem(
               icon: ImageIcon(

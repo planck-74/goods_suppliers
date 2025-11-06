@@ -41,8 +41,8 @@ defaultConfig {
     applicationId "com.planck.goodssuppliers"
     minSdkVersion flutter.minSdkVersion
     targetSdkVersion 35
-    versionCode 13
-    versionName "1.1.0"
+    versionCode 15
+    versionName "2.0.0"
 }
 
 
