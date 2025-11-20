@@ -10,14 +10,14 @@ import 'package:goods/presentation/custom_widgets/custom_progress_indicator.dart
 import 'package:goods/presentation/screens/navigator_bar_screens/store_screens/product_searchtext_field.dart';
 import 'package:goods/presentation/screens/navigator_bar_screens/store_screens/add_products/sheet_add_product.dart';
 
-class AddProduct extends StatefulWidget {
-  const AddProduct({super.key});
+class AddProductScreen extends StatefulWidget {
+  const AddProductScreen({super.key});
 
   @override
-  State<AddProduct> createState() => _AddProductState();
+  State<AddProductScreen> createState() => _AddProductScreenState();
 }
 
-class _AddProductState extends State<AddProduct> {
+class _AddProductScreenState extends State<AddProductScreen> {
   late ControllerCubit controllerCubit;
 
   @override

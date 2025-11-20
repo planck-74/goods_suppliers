@@ -128,7 +128,7 @@ class NotificationService {
 
         debugPrint('FCM token saved: $token');
       } else {
-        debugPrint('Cannot save FCM token: token=$token, user=${user?.uid}');
+        debugPrint('Cannot save FCM token: token=$token, user=${supplierId}');
       }
     } catch (e) {
       debugPrint('Error saving FCM token: $e');
@@ -160,7 +160,7 @@ class NotificationService {
         await _firestore.collection('suppliers').doc(supplierId).update({
           'fcmTokens': FieldValue.delete(),
         });
-        debugPrint('All FCM tokens removed for user: ${user.uid}');
+        debugPrint('All FCM tokens removed for user: ${supplierId}');
       }
     } catch (e) {
       debugPrint('Error removing all FCM tokens: $e');
@@ -176,13 +176,13 @@ class NotificationService {
           // أولا احذف التوكن القديم
           final oldToken = await _messaging.getToken();
           if (oldToken != null) {
-            await _firestore.collection('suppliers').doc(user.uid).update({
+            await _firestore.collection('suppliers').doc(supplierId).update({
               'fcmTokens': FieldValue.arrayRemove([oldToken]),
             });
           }
 
           // ثم أضف التوكن الجديد
-          await _firestore.collection('suppliers').doc(user.uid).set({
+          await _firestore.collection('suppliers').doc(supplierId).set({
             'fcmTokens': FieldValue.arrayUnion([newToken]),
             'tokenLastUpdated': FieldValue.serverTimestamp(),
             'platform': Platform.isAndroid ? 'android' : 'ios',

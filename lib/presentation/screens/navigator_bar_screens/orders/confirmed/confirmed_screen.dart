@@ -127,7 +127,7 @@ class _ConfirmedState extends State<Confirmed> {
                                 onConfirm: () => cancel(context, order),
                               ),
                               orders: sortedOrders,
-                              navigatorScreen: '/ConfirmedItemsScreen',
+                              navigatorScreen: '/RecentItemsScreen',
                             );
                           },
                         )

@@ -11,101 +11,108 @@ class AddProductCubit extends Cubit<AddProductState> {
 
   final Map<String, Map<String, dynamic>> selectedProducts = {};
 
-  final TextEditingController priceController = TextEditingController();
-  final TextEditingController minQuantityController = TextEditingController();
-  final TextEditingController maxQuantityController = TextEditingController();
-  final TextEditingController offerPriceController = TextEditingController();
-  final TextEditingController maxQuantityControllerOffer =
-      TextEditingController();
+  // Map to store controllers per product
+  final Map<String, ProductControllers> _productControllers = {};
 
-  bool isOnSale = false;
-  bool isAvailable = true;
-  DateTime? selectedDate;
-  void initializeControllers(Map<String, dynamic> product) {
-    final productId = product['productId'].toString();
+  // Individual product controller management
+  ProductControllers getOrCreateControllers(
+      String productId, Map<String, dynamic> product) {
+    if (!_productControllers.containsKey(productId)) {
+      _productControllers[productId] = ProductControllers(
+        priceController:
+            TextEditingController(text: product['price']?.toString() ?? '0'),
+        minQuantityController: TextEditingController(
+            text: product['minOrderQuantity']?.toString() ?? '1'),
+        maxQuantityController: TextEditingController(
+            text: product['maxOrderQuantity']?.toString() ?? '10'),
+        offerPriceController: TextEditingController(
+            text: product['offerPrice']?.toString() ?? '0'),
+        maxQuantityControllerOffer: TextEditingController(
+            text: product['maxOrderQuantityForOffer']?.toString() ?? '10'),
+      );
 
-    // أمنع التهيئة المتكررة
-    if (priceController.text.isNotEmpty) return;
+      // Setup listeners for this specific product
+      _setupListeners(productId);
+    }
+    return _productControllers[productId]!;
+  }
 
-    // تحميل القيم الأولية
-    priceController.text = product['price']?.toString() ?? '0';
-    minQuantityController.text = product['minOrderQuantity']?.toString() ?? '1';
-    maxQuantityController.text =
-        product['maxOrderQuantity']?.toString() ?? '10';
-    offerPriceController.text = product['offerPrice']?.toString() ?? '0';
-    maxQuantityControllerOffer.text =
-        product['maxOrderQuantityForOffer']?.toString() ?? '10';
+  void _setupListeners(String productId) {
+    final controllers = _productControllers[productId]!;
 
-    isAvailable = product['availability'] ?? true;
-    isOnSale = product['isOnSale'] ?? false;
-    selectedDate = product['endDate'];
-
-    // إضافة المنتج مبدئيًا لو مش موجود
-    selectedProducts[productId] = Map.from(product);
-
-    // ربط الكونترولرز بالتحديثات
-    priceController.addListener(() {
-      _updateProductField(productId, 'price', priceController.text);
+    controllers.priceController.addListener(() {
+      _updateProductField(productId, 'price', controllers.priceController.text);
     });
 
-    minQuantityController.addListener(() {
+    controllers.minQuantityController.addListener(() {
+      _updateProductField(productId, 'minOrderQuantity',
+          controllers.minQuantityController.text);
+    });
+
+    controllers.maxQuantityController.addListener(() {
+      _updateProductField(productId, 'maxOrderQuantity',
+          controllers.maxQuantityController.text);
+    });
+
+    controllers.offerPriceController.addListener(() {
       _updateProductField(
-          productId, 'minOrderQuantity', minQuantityController.text);
+          productId, 'offerPrice', controllers.offerPriceController.text);
     });
 
-    maxQuantityController.addListener(() {
-      _updateProductField(
-          productId, 'maxOrderQuantity', maxQuantityController.text);
-    });
-
-    offerPriceController.addListener(() {
-      _updateProductField(productId, 'offerPrice', offerPriceController.text);
-    });
-
-    maxQuantityControllerOffer.addListener(() {
+    controllers.maxQuantityControllerOffer.addListener(() {
       _updateProductField(productId, 'maxOrderQuantityForOffer',
-          maxQuantityControllerOffer.text);
+          controllers.maxQuantityControllerOffer.text);
     });
-
-    emit(AddProductLoaded(Map.from(selectedProducts)));
   }
 
   void _updateProductField(String productId, String key, dynamic value) {
-    final current = selectedProducts[productId] ?? {};
-    final updated = {...current, key: _tryParseNumber(value)};
-    selectedProducts[productId] = updated;
-    emit(AddProductLoaded(Map.from(selectedProducts)));
+    if (selectedProducts.containsKey(productId)) {
+      final current = selectedProducts[productId] ?? {};
+      final updated = {...current, key: _tryParseNumber(value)};
+      selectedProducts[productId] = updated;
+      emit(AddProductLoaded(Map.from(selectedProducts)));
+    }
   }
 
   dynamic _tryParseNumber(String value) {
     final parsed = int.tryParse(value);
-    return parsed ?? value; // لو ما قدرش يحوله رقم، يخليه String زي ما هو
-  }
-
-  void disposeControllers() {
-    priceController.dispose();
-    minQuantityController.dispose();
-    maxQuantityController.dispose();
-    offerPriceController.dispose();
-    maxQuantityControllerOffer.dispose();
+    return parsed ?? value;
   }
 
   void selectProducts(Map<String, dynamic> product) {
-    emit(AddProductLoading(selectedProducts));
-
     final productId = product['productId'].toString();
+
     if (selectedProducts.containsKey(productId)) {
+      // Remove product and dispose its controllers
       selectedProducts.remove(productId);
+      _disposeProductControllers(productId);
     } else {
-      selectedProducts[productId] = product;
+      // Add product and create new controllers
+      selectedProducts[productId] = Map.from(product);
+      getOrCreateControllers(productId, product);
     }
+
     emit(AddProductLoaded(Map.from(selectedProducts)));
+  }
+
+  void _disposeProductControllers(String productId) {
+    if (_productControllers.containsKey(productId)) {
+      _productControllers[productId]!.dispose();
+      _productControllers.remove(productId);
+    }
   }
 
   Map<String, dynamic>? getProduct(String productId) =>
       selectedProducts[productId];
+
   bool isSelected(String productId) => selectedProducts.containsKey(productId);
+
   void clearProducts() {
+    // Dispose all controllers before clearing
+    _productControllers.forEach((key, controllers) {
+      controllers.dispose();
+    });
+    _productControllers.clear();
     selectedProducts.clear();
     emit(AddProductLoaded(Map.from(selectedProducts)));
   }
@@ -123,6 +130,7 @@ class AddProductCubit extends Cubit<AddProductState> {
       int price = int.tryParse(productData['price']?.toString() ?? '0') ?? 0;
       if (price == 0) hasPriceError = true;
     });
+
     if (hasPriceError) {
       showCustomPositionedSnackBarError(
           context: context,
@@ -133,7 +141,8 @@ class AddProductCubit extends Cubit<AddProductState> {
 
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     try {
-      emit(AddProductLoading(selectedProducts));
+      emit(AddProductLoading(Map.from(selectedProducts)));
+
       WriteBatch batch = firestore.batch();
       selectedProducts.forEach((productId, productData) {
         DocumentReference productRef = firestore
@@ -143,20 +152,62 @@ class AddProductCubit extends Cubit<AddProductState> {
             .doc(productId);
         batch.set(productRef, productData);
       });
+
       await batch.commit();
+
       Navigator.pop(context);
       showCustomPositionedSnackBar(
           context: context, title: 'تمت', message: message);
+
       context
           .read<SearchProductsCubit>()
           .removeAddedProductsFromList(selectedProducts.keys.toList());
+
+      // Clear all products and controllers after successful upload
       clearProducts();
-    } catch (e) {}
+    } catch (e) {
+      emit(AddProductError(e.toString()));
+    }
   }
 
   void updateProduct(Map<String, dynamic> product) {
     final productId = product['productId'].toString();
     selectedProducts[productId] = product;
     emit(AddProductLoaded(Map.from(selectedProducts)));
+  }
+
+  @override
+  Future<void> close() {
+    // Dispose all controllers when cubit is closed
+    _productControllers.forEach((key, controllers) {
+      controllers.dispose();
+    });
+    _productControllers.clear();
+    return super.close();
+  }
+}
+
+// Helper class to manage controllers for each product
+class ProductControllers {
+  final TextEditingController priceController;
+  final TextEditingController minQuantityController;
+  final TextEditingController maxQuantityController;
+  final TextEditingController offerPriceController;
+  final TextEditingController maxQuantityControllerOffer;
+
+  ProductControllers({
+    required this.priceController,
+    required this.minQuantityController,
+    required this.maxQuantityController,
+    required this.offerPriceController,
+    required this.maxQuantityControllerOffer,
+  });
+
+  void dispose() {
+    priceController.dispose();
+    minQuantityController.dispose();
+    maxQuantityController.dispose();
+    offerPriceController.dispose();
+    maxQuantityControllerOffer.dispose();
   }
 }

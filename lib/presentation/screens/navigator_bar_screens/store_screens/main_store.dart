@@ -53,7 +53,7 @@ class _StoreState extends State<Store> {
                   ),
                   IconButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/AddProduct');
+                      Navigator.pushNamed(context, '/AddProductScreen');
                     },
                     icon: const Icon(
                       Icons.add,
@@ -68,6 +68,8 @@ class _StoreState extends State<Store> {
                 color: Theme.of(context).hoverColor,
                 child: TabBar(
                   isScrollable: false,
+                  indicatorColor: primaryColor,
+                  labelColor: primaryColor,
                   tabs: const [
                     Tab(text: 'عروض'),
                     Tab(text: 'موجود'),
@@ -79,7 +81,6 @@ class _StoreState extends State<Store> {
                 ),
               ),
               const Flexible(
-
                 child: TabBarView(
                   physics: NeverScrollableScrollPhysics(),
                   children: [Offer(), Available(), UnAvailable()],

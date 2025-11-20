@@ -21,19 +21,33 @@ class ProductDetailForm extends StatefulWidget {
 }
 
 class ProductDetailFormState extends State<ProductDetailForm> {
+  late ProductControllers controllers;
+  DateTime? selectedDate;
+
   @override
   void initState() {
     super.initState();
-    context.read<AddProductCubit>().initializeControllers(widget.product);
+    final productId = widget.product['productId'].toString();
+    
+    // Get or create controllers for this specific product
+    controllers = context.read<AddProductCubit>().getOrCreateControllers(
+      productId, 
+      widget.product
+    );
+    
+    // Initialize date from product
+    selectedDate = widget.product['endDate'];
   }
 
   void updateProductField(String key, dynamic value) {
-    final current = context
-            .read<AddProductCubit>()
-            .getProduct(widget.product['productId']) ??
-        widget.product;
-    final updated = {...current, key: value};
-    context.read<AddProductCubit>().updateProduct(updated);
+    final productId = widget.product['productId'].toString();
+    final cubit = context.read<AddProductCubit>();
+    final currentProduct = cubit.getProduct(productId);
+    
+    if (currentProduct != null) {
+      final updated = {...currentProduct, key: value};
+      cubit.updateProduct(updated);
+    }
   }
 
   @override
@@ -41,17 +55,18 @@ class ProductDetailFormState extends State<ProductDetailForm> {
     return BlocBuilder<AddProductCubit, AddProductState>(
       builder: (context, state) {
         final cubit = context.read<AddProductCubit>();
-        final product =
-            cubit.getProduct(widget.product['productId']) ?? widget.product;
+        final productId = widget.product['productId'].toString();
+        final product = cubit.getProduct(productId) ?? widget.product;
+        
         final widgets = AddProductsWidgets(
           product: product,
           formKey: widget.formKey,
-          selectedDate: cubit.selectedDate,
-          priceController: cubit.priceController,
-          maxQuantityController: cubit.maxQuantityController,
-          minQuantityController: cubit.minQuantityController,
-          offerPriceController: cubit.offerPriceController,
-          maxQuantityControllerOffer: cubit.maxQuantityControllerOffer,
+          selectedDate: selectedDate,
+          priceController: controllers.priceController,
+          maxQuantityController: controllers.maxQuantityController,
+          minQuantityController: controllers.minQuantityController,
+          offerPriceController: controllers.offerPriceController,
+          maxQuantityControllerOffer: controllers.maxQuantityControllerOffer,
           storeId: storeId,
           updateProductField: updateProductField,
           setState: setState,
@@ -69,13 +84,13 @@ class ProductDetailFormState extends State<ProductDetailForm> {
                   widgets.buildProductInfoSection(product),
                   const Divider(),
                   PriceQuantitySectionAddButton(
-                    priceController: cubit.priceController,
-                    maxQuantityController: cubit.maxQuantityController,
-                    minQuantityController: cubit.minQuantityController,
+                    priceController: controllers.priceController,
+                    maxQuantityController: controllers.maxQuantityController,
+                    minQuantityController: controllers.minQuantityController,
                     product: product,
                   ),
                   widgets.buildCheckbox(),
-                  if (cubit.isOnSale) ...[
+                  if (product['isOnSale'] == true) ...[
                     widgets.buildExpirationDateButton(context),
                     const SizedBox(height: 12),
                     widgets.buildOfferPriceSection(),
